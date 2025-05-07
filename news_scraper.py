@@ -5,6 +5,9 @@ import os
 from email.mime.text import MIMEText
 from datetime import datetime, timezone
 from dotenv import load_dotenv
+from pytrends.request import TrendReq
+from itertools import product
+import time
 
 # Load environment variables from .env file (useful for local testing)
 load_dotenv()
@@ -24,8 +27,46 @@ if not all(required_env):
 BASE_URL = "https://newsapi.org/v2/everything"
 
 countries = ["Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China", "Japan"]
-topics = ["logistics shipping", "cement clinker construction", "trade import export", "infrastructure"]
+topics = ["logistics", "shipping", "cement", "clinker", "construction", "trade", "import", "export", "infrastructure"]
+
+def get_top_trending_queries(limit=25, sleep_seconds=1, max_checks=50):
+    scores = []
+    checked = 0
+    queries = []
     
+    # Generate combinations with countries and phrases
+    for country in countries:
+        for phrase in phrases:
+            query = f"{phrase} {country}"
+            queries.append(query)
+
+    for query in queries:
+        try:
+            pytrends.build_payload([query], timeframe='now 1-d')
+            interest = pytrends.interest_over_time()
+            checked += 1
+            if not interest.empty:
+                avg_score = interest[query].mean()
+                scores.append((query, avg_score))
+        except Exception as e:
+            print(f"[WARN] Skipping query '{query}': {e}")
+        time.sleep(sleep_seconds)
+        if checked >= max_checks:
+            break
+
+    # Sorting all queries based on their trend scores and getting the top N
+    sorted_queries = sorted(scores, key=lambda x: x[1], reverse=True)[:limit]
+    
+    # Adjusting the phrases by dropping less popular words dynamically
+    adjusted_queries = []
+    for query, _ in sorted_queries:
+        words = query.split()
+        filtered_words = [word for word in words if is_popular_word(word)]  # Only keep popular words
+        adjusted_query = " ".join(filtered_words)
+        adjusted_queries.append(adjusted_query)
+    
+    return adjusted_queries
+
 def get_news(query):
     try:
         response = requests.get(BASE_URL, params={
@@ -33,13 +74,22 @@ def get_news(query):
             "apiKey": API_KEY,
             "sortBy": "publishedAt",
             "language": "en",
-            "pageSize": 3
+            "pageSize": 4
         })
         response.raise_for_status()
         return response.json().get("articles", [])
     except requests.RequestException as e:
         print(f"Failed to fetch news for query '{query}': {e}")
         return []
+
+# Helper function to determine if a word should be kept (e.g., based on its current trend score)
+def is_popular_word(word):
+    # Implement a scoring mechanism for each word (this can be a more sophisticated model, like checking its overall trend score)
+    # For simplicity, we're going to keep words that appear more than a threshold number of times in top queries
+    popular_threshold = 2  # Example threshold: if word appears more than 3 times in trending queries, it's considered popular
+    word_count = sum(word in query for query, _ in get_top_trending_queries())  # Count how often word appears in top queries
+    
+    return word_count >= popular_threshold
 
 def send_email(content):
     msg = MIMEText(content, "plain", "utf-8")
@@ -56,29 +106,41 @@ def send_email(content):
     except Exception as e:
         print(f"[ERROR] Failed to send email: {e}")
         
+# Main execution function
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    news_summary = f"News Summary for {now}\n\n"
+    news_summary = f"News Summary for {now}\n"
     all_articles = []
 
-    for country in countries:
-        for topic in topics:
-            query = f"{topic} AND {country}"
-            articles = get_news(query)
-            for article in articles:
-                publishedAt = article.get("publishedAt", "")
-                title = article.get("title", "")
-                url = article.get("url", "")
-                source = article.get("source", {}).get("name", "")
-                all_articles.append((publishedAt, title, url, source, country, topic))
+    # Get the top 25 trending queries with adjusted phrases
+    top_queries = get_top_trending_queries(limit=25)
+    country_articles = {country: [] for country in countries}
 
-    if not all_articles:
-        news_summary += "No articles found."
-    else:
-        for entry in all_articles:
-            publishedAt, title, url, _, country, topic = entry
-            news_summary += f"{publishedAt} | {title} | {url} ({country}, {topic})\n"
-    
+    # Fetch news for the top trending queries
+    for query in top_queries:
+        articles = get_news(query)
+        matched_country = next((c for c in countries if c.lower() in query.lower()), "Unknown")
+        for article in articles:
+            publishedAt = article.get("publishedAt", "")
+            title = article.get("title", "")
+            url = article.get("url", "")
+            source = article.get("source", {}).get("name", "")
+            topic = query.replace(matched_country, '').strip()
+            entry = (publishedAt, title, url, source, matched_country, topic)
+            country_articles[matched_country].append(entry)
+            all_articles.append(entry)
+
+    # Organize news summaries by country
+    for country in countries:
+        news_summary += f"\n{country}\n"
+        entries = country_articles[country]
+        if entries:
+            for idx, entry in enumerate(entries, 1):
+                publishedAt, title, url, _, _, topic = entry
+                news_summary += f"  {idx}. [{topic}] {publishedAt} | {title} | {url}\n"
+        else:
+            news_summary += "  No news found.\n"
+
     # Save as CSV
     filename = f"news_{now}.csv"
     with open(filename, mode="w", newline='', encoding="utf-8") as file:
@@ -87,6 +149,7 @@ def main():
         for entry in all_articles:
             writer.writerow(entry)
 
+    # Send the email
     send_email(news_summary)
 
 if __name__ == "__main__":
