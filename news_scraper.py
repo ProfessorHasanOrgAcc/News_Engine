@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from pytrends.request import TrendReq
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+import pandas as pd
 
 # Load environment variables
 load_dotenv()
@@ -20,24 +21,25 @@ EMAIL_USER = os.getenv("EMAIL_USER")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 EMAIL_TO = os.getenv("EMAIL_TO")
 
-# Check for missing variables
+# Validate env
 required_env = [API_KEY, EMAIL_HOST, EMAIL_USER, EMAIL_PASSWORD, EMAIL_TO]
 if not all(required_env):
     raise EnvironmentError("Missing one or more required environment variables.")
 
 BASE_URL = "https://newsapi.org/v2/everything"
 
-countries = ["Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China"]
+countries = ["Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China", "Japan"]
 phrases = [
     "limestone export regulation", "blast furnace slag trade", "gypsum export tariff",
-    "clinker logistics bottleneck", "cement domestic consumption", "cement clinker shortage",
-    "limestone mining permit", "energy policy", "fuel price hike", "port congestion"
+    "clinker logistics bottleneck", "cement domestic consumption", "cement input shortage",
+    "limestone mining permit", "cement energy subsidy", "clinker production cost policy",
+    "fuel price hike cement", "port congestion clinker export", "rail transport clinker delay"
 ]
 
-# Set up pytrends
+# Setup Pytrends
 pytrends = TrendReq(hl='en-US', tz=360)
 
-# Session with retry for news API
+# Setup retry-enabled session for NewsAPI
 session = requests.Session()
 retries = Retry(total=3, backoff_factor=2, status_forcelist=[429, 500, 502, 503, 504])
 adapter = HTTPAdapter(max_retries=retries)
@@ -60,14 +62,18 @@ def get_top_trending_queries(limit=25, sleep_seconds=1, max_checks=50):
     for query in seen_queries:
         try:
             pytrends.build_payload([query], timeframe='now 1-d')
-            interest = pytrends.interest_over_time()
-            checked += 1
-            if not interest.empty and query in interest.columns:
-                avg_score = interest[query].mean()
-                scores.append((query, avg_score))
+            df = pytrends.interest_over_time()
+
+            # Workaround for FutureWarning (Pandas fillna)
+            if not df.empty:
+                df = df.infer_objects(copy=False)
+                if query in df.columns:
+                    avg_score = df[query].mean()
+                    scores.append((query, avg_score))
         except Exception as e:
             print(f"[WARN] Skipping query '{query}': {e}")
         time.sleep(sleep_seconds)
+        checked += 1
         if checked >= max_checks:
             break
 
@@ -114,8 +120,9 @@ def main():
 
     for query, _ in top_queries:
         country = query_country_map.get(query, "Unknown")
-        articles = get_news(query)
         topic = query.replace(country, "").strip()
+        articles = get_news(query)
+
         for article in articles:
             publishedAt = article.get("publishedAt", "")
             title = article.get("title", "")
@@ -125,7 +132,7 @@ def main():
             country_articles[country].append(entry)
             all_articles.append(entry)
 
-    # Summarize by country (limit 3 entries each)
+    # Build summary per country
     for country in countries:
         entries = country_articles[country][:3]
         news_summary += f"\n📍 {country}\n"
@@ -147,4 +154,6 @@ def main():
     send_email(news_summary)
 
 if __name__ == "__main__":
+    # Fix for pandas FutureWarning globally if needed
+    pd.set_option('future.no_silent_downcasting', True)
     main()
