@@ -27,12 +27,11 @@ if not all(required_env):
 
 BASE_URL = "https://newsapi.org/v2/everything"
 
-countries = ["Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China", "Japan"]
+countries = ["Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China"]
 phrases = [
     "limestone export regulation", "blast furnace slag trade", "gypsum export tariff",
-    "clinker logistics bottleneck", "cement domestic consumption", "cement input shortage",
-    "limestone mining permit", "cement energy subsidy", "clinker production cost policy",
-    "fuel price hike cement", "port congestion clinker export", "rail transport clinker delay"
+    "clinker logistics bottleneck", "cement domestic consumption", "cement clinker shortage",
+    "limestone mining permit", "energy policy", "fuel price hike", "port congestion"
 ]
 
 # Set up pytrends
