@@ -2,8 +2,11 @@ name: Run Python script every minute
 
 on:
   schedule:
-    - cron: '0 */12 * * *'  
+    - cron: '0 1 * * *'  
   workflow_dispatch:      # Manual run option
+
+env:
+  NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
 
 jobs:
   scrape-news:
