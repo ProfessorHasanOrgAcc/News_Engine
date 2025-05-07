@@ -2,6 +2,7 @@ import requests
 import csv
 import smtplib
 import os
+import pandas as pd
 from email.mime.text import MIMEText
 from datetime import datetime, timezone
 from dotenv import load_dotenv
@@ -11,6 +12,9 @@ import time
 
 # Load environment variables from .env file (useful for local testing)
 load_dotenv()
+
+# Set pandas option to suppress future warnings
+pd.set_option('future.no_silent_downcasting', True)
 
 API_KEY = os.getenv("NEWS_API_KEY")
 EMAIL_HOST = os.getenv("EMAIL_HOST")
