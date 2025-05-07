@@ -2,3 +2,5 @@ requests           # For HTTP requests to NewsAPI
 pandas             # For data manipulation and CSV handling
 python-dotenv      # For loading API keys from a .env file
 schedule           # For optional local scheduling
+pytrends           # For fetching Google Trends data
+
