@@ -113,7 +113,7 @@ def send_email(content):
 
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    news_summary = f"News Summary for {now}\n"
+    news_summary = f"🗓️ News Summary for {now}\n"
     all_articles = []
     country_articles = {country: [] for country in countries}
 
@@ -140,7 +140,7 @@ def main():
 
     # Organizing news summaries by country
     for country in countries:
-        news_summary += f"\n{country}\n"
+        news_summary += f"\n{📍 country}\n"
         entries = country_articles[country]
         if entries:
             for idx, entry in enumerate(entries, 1):
