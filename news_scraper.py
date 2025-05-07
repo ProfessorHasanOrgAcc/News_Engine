@@ -6,7 +6,6 @@ from email.mime.text import MIMEText
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from pytrends.request import TrendReq
-from itertools import product
 import time
 
 # Load environment variables from .env file (useful for local testing)
@@ -27,7 +26,23 @@ if not all(required_env):
 BASE_URL = "https://newsapi.org/v2/everything"
 
 countries = ["Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China", "Japan"]
-topics = ["logistics", "shipping", "cement", "clinker", "construction", "trade", "import", "export", "infrastructure"]
+phrases = [
+    "limestone export regulation",
+    "blast furnace slag trade",
+    "gypsum export tariff",
+    "clinker logistics bottleneck",
+    "cement domestic consumption",
+    "cement input shortage",
+    "limestone mining permit",
+    "cement energy subsidy",
+    "clinker production cost policy",
+    "fuel price hike cement",
+    "port congestion clinker export",
+    "rail transport clinker delay"
+]
+
+# Initialize pytrends
+pytrends = TrendReq(hl='en-US', tz=360)
 
 def get_top_trending_queries(limit=25, sleep_seconds=1, max_checks=50):
     scores = []
