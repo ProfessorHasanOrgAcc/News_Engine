@@ -1,8 +1,9 @@
 import requests
 import csv
+import os
 from datetime import datetime
 
-API_KEY = "7be1181276f948f5b12691934cb31723"
+API_KEY = os.getenv("NEWS_API_KEY")
 BASE_URL = "https://newsapi.org/v2/everything"
 
 countries = ["India", "Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China", "Japan", "Korea"]
