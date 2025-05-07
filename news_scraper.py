@@ -23,8 +23,8 @@ if not all(required_env):
 
 BASE_URL = "https://newsapi.org/v2/everything"
 
-countries = ["India", "Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China", "Japan", "Korea"]
-topics = ["trade", "construction", "shipping", "clinker", "cement", "logistics", "import", "export", "infrastructure"]
+countries = ["Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China", "Japan"]
+topics = ["logistics shipping", "cement clinker construction", "trade import export", "infrastructure"]
     
 def get_news(query):
     try:
@@ -33,7 +33,7 @@ def get_news(query):
             "apiKey": API_KEY,
             "sortBy": "publishedAt",
             "language": "en",
-            "pageSize": 20
+            "pageSize": 3
         })
         response.raise_for_status()
         return response.json().get("articles", [])
