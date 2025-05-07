@@ -1,4 +1,4 @@
-name: Run Python script every minute
+name: Run Python script every day at 1 AM UTC
 
 on:
   schedule:
