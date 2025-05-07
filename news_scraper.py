@@ -3,7 +3,7 @@ import csv
 import smtplib
 import os
 from email.mime.text import MIMEText
-from datetime import datetime
+from datetime import datetime, timezone
 
 API_KEY = os.getenv("NEWS_API_KEY")
 EMAIL_HOST = os.getenv("EMAIL_HOST")
@@ -40,7 +40,7 @@ def send_email(content):
         server.send_message(msg)
         
 def main():
-    now = datetime.utcnow().strftime("%Y-%m-%d")
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     news_summary = f"News Summary for {now}\n\n"
     all_articles = []
 
