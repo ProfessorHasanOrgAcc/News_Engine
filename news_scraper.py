@@ -57,6 +57,9 @@ def get_top_trending_queries(limit=25, max_checks=70):
     # Randomize queries
     random.shuffle(queries)
     
+    # Define the proxies here (for use with both pytrends and requests)
+    proxies = {'http': 'socks5h://127.0.0.1:9050', 'https': 'socks5h://127.0.0.1:9050'}
+
     for idx, query in enumerate(queries[:max_checks]):
         print(f"[INFO] Checking {idx+1}/{max_checks} → {query}")
         
