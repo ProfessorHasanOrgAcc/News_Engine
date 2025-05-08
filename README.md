@@ -23,12 +23,12 @@ This project scrapes trending news related to the cement industry, including top
 3. Install the required dependencies ` pip install -r requirements.txt `
    
 4. Create a .env file in the project root with your environment variables. Example:
-` NEWS_API_KEY=your_news_api_key 
- EMAIL_HOST=smtp.your-email-provider.com 
- EMAIL_PORT=587 
- EMAIL_USER=your-email@example.com 
- EMAIL_PASSWORD=your-email-password 
- EMAIL_TO=recipient-email@example.com `
+` NEWS_API_KEY=your_news_api_key `
+` EMAIL_HOST=smtp.your-email-provider.com `
+` EMAIL_PORT=587 `
+` EMAIL_USER=your-email@example.com `
+` EMAIL_PASSWORD=your-email-password `
+` EMAIL_TO=recipient-email@example.com `
    
 Replace the placeholders with your actual credentials.
 
