@@ -5,7 +5,6 @@ import os
 import pandas as pd
 import random
 import time
-import requests
 from email.mime.text import MIMEText
 from datetime import datetime, timezone
 from dotenv import load_dotenv
@@ -29,9 +28,9 @@ EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 EMAIL_TO = os.getenv("EMAIL_TO")
 
 # Check for missing variables
-required_env = [API_KEY, EMAIL_HOST, EMAIL_USER, EMAIL_PASSWORD, EMAIL_TO]
-if not all(required_env):
-    raise EnvironmentError("Missing one or more required environment variables.")
+missing_vars = [var for var in required_env if not os.getenv(var)]
+if missing_vars:
+    raise EnvironmentError(f"Missing the following environment variables: {', '.join(missing_vars)}")
 
 BASE_URL = "https://newsapi.org/v2/everything"
 
