@@ -42,7 +42,7 @@ phrases = ["limestone export regulation", "clinker export tariff", "bulk shippin
 
 # Initialize pytrends with Tor
 proxy_list = ['socks5h://127.0.0.1:9050']
-pytrends = TrendReq(proxies=proxies, timeout=(10, 25))  # (connect, read)
+pytrends = TrendReq(proxies=proxy_list, timeout=(10, 25))  # (connect, read)
 
 
 def rotate_tor_ip():
