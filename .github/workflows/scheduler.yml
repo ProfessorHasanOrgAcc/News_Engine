@@ -28,14 +28,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Install and configure Tor (CookieAuthentication)
+      - name: Install and configure Tor (HashedControlPassword)
         run: |
           sudo apt-get update
           sudo apt-get install tor -y
           echo "ControlPort 9051" | sudo tee -a /etc/tor/torrc
-          echo "CookieAuthentication 1" | sudo tee -a /etc/tor/torrc
+          echo "HashedControlPassword 16:9954B614B2DD778A60D7F1B1414D34DC3B2951C465A545628C2A4269C8" | sudo tee -a /etc/tor/torrc
+          echo "CookieAuthentication 0" | sudo tee -a /etc/tor/torrc
           sudo service tor restart
           sleep 10  # Give Tor a moment to initialize
+
 
       - name: Run scraper
         run: python news_scraper.py
