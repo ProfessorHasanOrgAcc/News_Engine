@@ -31,59 +31,54 @@ if not all(required_env):
 BASE_URL = "https://newsapi.org/v2/everything"
 
 countries = ["Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China", "Japan"]
-phrases = [
-    "limestone export regulation",
-    "clinker export tariff",
-    "bulk shipping",
-    "cement domestic consumption",
-    "cement input shortage",
-    "cement energy subsidy",
-    "energy policy",
-    "fuel price hike",
-    "port congestion"
-]
+phrases = ["limestone export regulation", "clinker export tariff", "bulk shipping", "cement domestic consumption", 
+           "cement input shortage", "cement energy subsidy", "energy policy", "fuel price hike", "port congestion"]
 
 # Initialize pytrends
 pytrends = TrendReq(hl='en-US', tz=360)
 
-def get_top_trending_queries(limit=25, sleep_seconds=1, max_checks=50):
+
+
+def get_top_trending_queries(limit=25, max_checks=70):
     scores = []
     checked = 0
     queries = []
-    
+
     # Generate combinations with countries and phrases
     for country in countries:
         for phrase in phrases:
             query = f"{phrase} {country}"
             queries.append(query)
 
-    for query in queries:
+    for i, query in enumerate(queries):
+        if checked >= max_checks:
+            break
+
         try:
             pytrends.build_payload([query], timeframe='now 1-d')
             interest = pytrends.interest_over_time()
             checked += 1
+
             if not interest.empty:
                 avg_score = interest[query].mean()
                 scores.append((query, avg_score))
+                print(f"[INFO] {checked}/{max_checks}: '{query}' scored {avg_score:.2f}")
+            else:
+                print(f"[INFO] {checked}/{max_checks}: '{query}' returned no data")
         except Exception as e:
             print(f"[WARN] Skipping query '{query}': {e}")
-        # Add random delay between requests (between 1 and 3 seconds)
-        time.sleep(random.uniform(1, 5))
-        if checked >= max_checks:
-            break
+
+        # Apply dynamic sleep with jitter
+        delay = random.uniform(10, 25)
+        time.sleep(delay)
 
     # Sorting all queries based on their trend scores and getting the top N
     sorted_queries = sorted(scores, key=lambda x: x[1], reverse=True)[:limit]
-    
-    # Adjusting the phrases by dropping less popular words dynamically
-    adjusted_queries = []
-    for query, _ in sorted_queries:
-        words = query.split()
-        filtered_words = [word for word in words]  # No filter needed for now
-        adjusted_query = " ".join(filtered_words)
-        adjusted_queries.append(adjusted_query)
-    
-    return adjusted_queries
+
+    # Return only the queries, not the scores
+    return [query for query, _ in sorted_queries]
+
+
 
 def get_news(query):
     try:
@@ -99,6 +94,9 @@ def get_news(query):
     except requests.RequestException as e:
         print(f"Error: Failed to fetch news for '{query}': {e}")
         return []
+
+
+
 
 def send_email(content):
     msg = MIMEText(content, "plain", "utf-8")
