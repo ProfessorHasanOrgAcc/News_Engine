@@ -39,16 +39,43 @@ countries = ["Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China", "J
 phrases = ["limestone export regulation", "clinker export tariff", "bulk shipping", "cement domestic consumption", 
            "cement input shortage", "cement energy subsidy", "energy policy", "fuel price hike", "port congestion"]
 
-
 # Initialize pytrends with Tor
 proxy_list = ['socks5h://127.0.0.1:9050']
 pytrends = TrendReq(proxies=proxy_list, timeout=(20, 40))  # (connect, read)
 
-def rotate_tor_ip():
-    with Controller.from_port(port=9051) as controller:
-        controller.authenticate(password="no_hurry_in_2025")  # Use your actual password
-        controller.signal(Signal.NEWNYM)
-    print("[INFO] Tor IP rotated.")
+def get_current_tor_ip(timeout=10):
+    proxies = {'http': 'socks5h://127.0.0.1:9050', 'https': 'socks5h://127.0.0.1:9050'}
+    
+    try:
+        return requests.get('http://httpbin.org/ip', proxies=proxies, timeout=timeout).json()['origin']
+    except Exception as e:
+        print(f"[WARN] Failed to fetch current IP: {e}")
+        return None
+
+def rotate_tor_ip(max_retries=5, wait_time=10):
+    old_ip = get_current_tor_ip()
+    if old_ip is None:
+        print("[WARN] Cannot fetch old IP, skipping validation.")
+    
+    for attempt in range(max_retries):
+        with Controller.from_port(port=9051) as controller:
+            controller.authenticate(password="no_hurry_in_2025")
+            controller.signal(Signal.NEWNYM)
+        print(f"[INFO] Sent NEWNYM signal. Waiting {wait_time}s...")
+        time.sleep(wait_time)
+        
+        new_ip = get_current_tor_ip()
+        if old_ip and new_ip and new_ip != old_ip:
+            print(f"[INFO] IP rotated successfully: {old_ip} → {new_ip}")
+            return
+        elif new_ip == old_ip:
+            print(f"[WARN] IP did not change. Retrying... ({attempt + 1}/{max_retries})")
+            time.sleep(5)
+        else:
+            print(f"[WARN] New IP not detected. Retrying... ({attempt + 1}/{max_retries})")
+
+    print("[ERROR] Failed to rotate Tor IP after max retries.")
+    raise Exception("Tor IP rotation failed.")
 
 def get_top_trending_queries(limit=25, max_checks=70):
     scores = []
