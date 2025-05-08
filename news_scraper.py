@@ -41,10 +41,7 @@ phrases = ["limestone export regulation", "clinker export tariff", "bulk shippin
 
 
 # Initialize pytrends with Tor
-proxies = {
-    'http': 'socks5h://127.0.0.1:9050',
-    'https': 'socks5h://127.0.0.1:9050'
-}
+proxy_list = ['socks5h://127.0.0.1:9050']
 pytrends = TrendReq(proxies=proxies, timeout=(10, 25))  # (connect, read)
 
 
