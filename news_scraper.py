@@ -39,12 +39,14 @@ countries = ["Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China", "J
 phrases = ["limestone export regulation", "clinker export tariff", "bulk shipping", "cement domestic consumption", 
            "cement input shortage", "cement energy subsidy", "energy policy", "fuel price hike", "port congestion"]
 
-# Setup Tor Proxy (SOCKS5)
-tor_session = requests.session()
-tor_session.proxies = {'http':  'socks5h://127.0.0.1:9050', 'https': 'socks5h://127.0.0.1:9050'}
 
 # Initialize pytrends with Tor
-pytrends = TrendReq(requests_session=tor_session, timeout=10)
+proxies = {
+    'http': 'socks5h://127.0.0.1:9050',
+    'https': 'socks5h://127.0.0.1:9050'
+}
+pytrends = TrendReq(proxies=proxies, timeout=(10, 25))  # (connect, read)
+
 
 def rotate_tor_ip():
     with Controller.from_port(port=9051) as controller:
@@ -80,6 +82,8 @@ def get_top_trending_queries(limit=25, max_checks=70):
         # Rotate Tor IP every 10 queries
         if (idx + 1) % 10 == 0:
             rotate_tor_ip()
+            ip = requests.get('http://httpbin.org/ip', proxies=proxies).json()
+            print("[DEBUG] Current IP via Tor:", ip)
     
     sorted_queries = sorted(scores, key=lambda x: x[1], reverse=True)[:limit]
     return [q for q, _ in sorted_queries]
