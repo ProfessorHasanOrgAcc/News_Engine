@@ -3,18 +3,23 @@ import csv
 import smtplib
 import os
 import pandas as pd
+import random
+import time
+import requests
 from email.mime.text import MIMEText
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from pytrends.request import TrendReq
-import random
-import time
+from stem import Signal
+from stem.control import Controller
 
 # Load environment variables from .env file (useful for local testing)
 load_dotenv()
 
 # Set pandas option to suppress future warnings
 pd.set_option('future.no_silent_downcasting', True)
+
+
 
 API_KEY = os.getenv("NEWS_API_KEY")
 EMAIL_HOST = os.getenv("EMAIL_HOST")
@@ -34,50 +39,50 @@ countries = ["Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China", "J
 phrases = ["limestone export regulation", "clinker export tariff", "bulk shipping", "cement domestic consumption", 
            "cement input shortage", "cement energy subsidy", "energy policy", "fuel price hike", "port congestion"]
 
-# Initialize pytrends
-pytrends = TrendReq(hl='en-US', tz=360)
+# Setup Tor Proxy (SOCKS5)
+tor_session = requests.session()
+tor_session.proxies = {'http':  'socks5h://127.0.0.1:9050', 'https': 'socks5h://127.0.0.1:9050'}
 
+# Initialize pytrends with Tor
+pytrends = TrendReq(requests_session=tor_session, timeout=10)
 
+def rotate_tor_ip():
+    with Controller.from_port(port=9051) as controller:
+        controller.authenticate(password="tor_secret_2025")
+        controller.signal(Signal.NEWNYM)
+    print("[INFO] Tor IP rotated.")
 
 def get_top_trending_queries(limit=25, max_checks=70):
     scores = []
-    checked = 0
-    queries = []
-
-    # Generate combinations with countries and phrases
-    for country in countries:
-        for phrase in phrases:
-            query = f"{phrase} {country}"
-            queries.append(query)
-
-    for i, query in enumerate(queries):
-        if checked >= max_checks:
-            break
-
+    queries = [f"{phrase} {country}" for country in countries for phrase in phrases]
+    
+    # Randomize queries
+    random.shuffle(queries)
+    
+    for idx, query in enumerate(queries[:max_checks]):
+        print(f"[INFO] Checking {idx+1}/{max_checks} → {query}")
+        
         try:
             pytrends.build_payload([query], timeframe='now 1-d')
             interest = pytrends.interest_over_time()
-            checked += 1
-
+            
             if not interest.empty:
                 avg_score = interest[query].mean()
                 scores.append((query, avg_score))
-                print(f"[INFO] {checked}/{max_checks}: '{query}' scored {avg_score:.2f}")
-            else:
-                print(f"[INFO] {checked}/{max_checks}: '{query}' returned no data")
+                print(f"[INFO] {query} ⟶ {avg_score:.2f}")
+            
         except Exception as e:
-            print(f"[WARN] Skipping query '{query}': {e}")
-
-        # Apply dynamic sleep with jitter
-        delay = random.uniform(10, 25)
-        time.sleep(delay)
-
-    # Sorting all queries based on their trend scores and getting the top N
+            print(f"[WARN] {query} failed: {e}")
+        
+        # Random delay
+        time.sleep(random.uniform(10, 25))
+        
+        # Rotate Tor IP every 10 queries
+        if (idx + 1) % 10 == 0:
+            rotate_tor_ip()
+    
     sorted_queries = sorted(scores, key=lambda x: x[1], reverse=True)[:limit]
-
-    # Return only the queries, not the scores
-    return [query for query, _ in sorted_queries]
-
+    return [q for q, _ in sorted_queries]
 
 
 def get_news(query):
@@ -87,7 +92,7 @@ def get_news(query):
             "apiKey": API_KEY,
             "sortBy": "publishedAt",
             "language": "en",
-            "pageSize": 4
+            "pageSize": 3
         })
         response.raise_for_status()
         return response.json().get("articles", [])
