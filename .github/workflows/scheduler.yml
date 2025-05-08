@@ -35,7 +35,7 @@ jobs:
           echo "ControlPort 9051" | sudo tee -a /etc/tor/torrc
           echo "CookieAuthentication 1" | sudo tee -a /etc/tor/torrc
           sudo service tor restart
-          sleep 5  # Give Tor a moment to initialize
+          sleep 10  # Give Tor a moment to initialize
 
       - name: Run scraper
         run: python news_scraper.py
