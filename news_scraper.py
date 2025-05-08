@@ -45,9 +45,9 @@ pytrends = TrendReq(proxies=proxy_list, timeout=(10, 25))  # (connect, read)
 
 def rotate_tor_ip():
     with Controller.from_port(port=9051) as controller:
-        controller.authenticate()  # Uses cookie authentication
-        controller.signal('NEWNYM')
-        print("[INFO] Tor IP rotated.")
+        controller.authenticate(password="no_hurry_in_2025")  # Use your actual password
+        controller.signal(Signal.NEWNYM)
+    print("[INFO] Tor IP rotated.")
 
 def get_top_trending_queries(limit=25, max_checks=70):
     scores = []
