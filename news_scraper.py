@@ -18,14 +18,15 @@ load_dotenv()
 # Set pandas option to suppress future warnings
 pd.set_option('future.no_silent_downcasting', True)
 
-
-
 API_KEY = os.getenv("NEWS_API_KEY")
 EMAIL_HOST = os.getenv("EMAIL_HOST")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
 EMAIL_USER = os.getenv("EMAIL_USER")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 EMAIL_TO = os.getenv("EMAIL_TO")
+
+# List the required environment variables
+required_env = ["NEWS_API_KEY", "EMAIL_HOST", "EMAIL_PORT", "EMAIL_USER", "EMAIL_PASSWORD", "EMAIL_TO"]
 
 # Check for missing variables
 missing_vars = [var for var in required_env if not os.getenv(var)]
