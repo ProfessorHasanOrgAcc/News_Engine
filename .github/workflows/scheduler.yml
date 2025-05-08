@@ -3,7 +3,7 @@ name: Run Python script every day at 1 AM UTC
 on:
   schedule:
     - cron: '0 1 * * *'  
-  workflow_dispatch:      # Manual run option
+  workflow_dispatch:
 
 env:
   NEWS_API_KEY: ${{ secrets.NEWS_API_KEY }}
@@ -12,7 +12,6 @@ env:
   EMAIL_USER: ${{ secrets.EMAIL_USER }}
   EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
   EMAIL_TO: ${{ secrets.EMAIL_TO }}
-
 
 jobs:
   scrape-news:
@@ -28,18 +27,16 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
-        
-      - name: Start Tor
+
+      - name: Install and configure Tor (CookieAuthentication)
         run: |
+          sudo apt-get update
           sudo apt-get install tor -y
-          sudo service tor start
-          
-      - name: Configure Tor Control Port for CookieAuthentication
-        run: |
           echo "ControlPort 9051" | sudo tee -a /etc/tor/torrc
           echo "CookieAuthentication 1" | sudo tee -a /etc/tor/torrc
           sudo service tor restart
-          
+          sleep 5  # Give Tor a moment to initialize
+
       - name: Run scraper
         run: python news_scraper.py
 
@@ -48,5 +45,5 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add news_*.csv
-          git commit -m "Add news data $(date -u)"
+          git commit -m "Add news data $(date -u)" || echo "No changes to commit"
           git push
