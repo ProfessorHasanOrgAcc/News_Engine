@@ -16,22 +16,19 @@ This project scrapes trending news related to the cement industry, including top
 - A valid email configuration for sending daily reports.
 
 # Installation
-1. Clone this repository:
-      'git clone https://github.com/your-username/news-scraper.git'
+1. Clone this repository 'git clone https://github.com/your-username/news-scraper.git'
    
-2. Navigate into the project directory:
-      'cd news-scraper'
+2. Navigate into the project directory 'cd news-scraper'
    
-3. Install the required dependencies:
-      'pip install -r requirements.txt'
+3. Install the required dependencies 'pip install -r requirements.txt'
    
 4. Create a .env file in the project root with your environment variables. Example:
-      'NEWS_API_KEY=your_news_api_key'
-      'EMAIL_HOST=smtp.your-email-provider.com'
-      'EMAIL_PORT=587'
-      'EMAIL_USER=your-email@example.com'
-      'EMAIL_PASSWORD=your-email-password'
-      'EMAIL_TO=recipient-email@example.com'
+'NEWS_API_KEY=your_news_api_key'
+'EMAIL_HOST=smtp.your-email-provider.com'
+'EMAIL_PORT=587'
+'EMAIL_USER=your-email@example.com'
+'EMAIL_PASSWORD=your-email-password'
+'EMAIL_TO=recipient-email@example.com'
    
 Replace the placeholders with your actual credentials.
 
@@ -40,8 +37,7 @@ Replace the placeholders with your actual credentials.
 To run the script locally and fetch the latest news:
 - Make sure your .env file is set up correctly.
   
-- Run the script:
-    'python news_scraper.py'
+- Run the script 'python news_scraper.py'
   This will fetch the top trending queries, collect news articles, save them in a CSV file, and send an email with the daily summary.
 
 ## Running via GitHub Actions
