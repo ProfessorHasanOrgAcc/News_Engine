@@ -34,10 +34,10 @@ jobs:
           sudo apt-get install tor -y
           sudo service tor start
           
-      - name: Configure Tor Control Port
+      - name: Configure Tor Control Port for CookieAuthentication
         run: |
           echo "ControlPort 9051" | sudo tee -a /etc/tor/torrc
-          echo "HashedControlPassword 16:60D45D63C8BD5B4576CE6A38055F00E9BFCD9DA344AA38F6A1AD41D189" | sudo tee -a /etc/tor/torrc
+          echo "CookieAuthentication 1" | sudo tee -a /etc/tor/torrc
           sudo service tor restart
           
       - name: Run scraper
