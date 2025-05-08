@@ -16,7 +16,7 @@ This project scrapes trending news related to the cement industry, including top
 - A valid email configuration for sending daily reports.
 
 # Installation
-1. Clone this repository ' git clone https://github.com/your-username/news-scraper.git '
+1. Clone this repository ` git clone https://github.com/your-username/news-scraper.git `
    
 2. Navigate into the project directory ' cd news-scraper '
    
