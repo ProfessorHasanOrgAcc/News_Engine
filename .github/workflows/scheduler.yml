@@ -32,6 +32,11 @@ jobs:
       - name: Run scraper
         run: python news_scraper.py
 
+      - name: Start Tor
+        run: |
+          sudo apt-get install tor -y
+          sudo service tor start
+
       - name: Commit and push results
         run: |
           git config --global user.name "github-actions"
