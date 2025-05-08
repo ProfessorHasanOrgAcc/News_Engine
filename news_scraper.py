@@ -44,12 +44,11 @@ phrases = ["limestone export regulation", "clinker export tariff", "bulk shippin
 proxy_list = ['socks5h://127.0.0.1:9050']
 pytrends = TrendReq(proxies=proxy_list, timeout=(10, 25))  # (connect, read)
 
-
 def rotate_tor_ip():
     with Controller.from_port(port=9051) as controller:
-        controller.authenticate(password="tor_secret_2025")
-        controller.signal(Signal.NEWNYM)
-    print("[INFO] Tor IP rotated.")
+        controller.authenticate()  # Uses cookie authentication
+        controller.signal('NEWNYM')
+        print("[INFO] Tor IP rotated.")
 
 def get_top_trending_queries(limit=25, max_checks=70):
     scores = []
