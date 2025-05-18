@@ -6,7 +6,7 @@ import pandas as pd
 import random
 import time
 from email.mime.text import MIMEText
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from pytrends.request import TrendReq
 from stem import Signal
