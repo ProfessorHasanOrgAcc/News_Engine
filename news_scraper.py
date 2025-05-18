@@ -40,10 +40,6 @@ if missing_vars:
 
 BASE_URL = "https://newsapi.org/v2/everything"
 
-# Load country-phrase mapping
-country_phrase_map = load_country_phrases()
-countries = list(country_phrase_map.keys())
-
 
 # Initialize pytrends with Tor
 proxy_list = ['socks5h://127.0.0.1:9050']
@@ -61,6 +57,10 @@ def load_country_phrases(filepath="phrases.txt"):
     except FileNotFoundError:
         print(f"[ERROR] Could not find {filepath}.")
     return country_phrase_map
+
+# Load country-phrase mapping
+country_phrase_map = load_country_phrases()
+countries = list(country_phrase_map.keys())
 #---------------------------------------------------------------------------------------------------------------------------
 def get_current_tor_ip(timeout=10):
     proxies = {'http': 'socks5h://127.0.0.1:9050', 'https': 'socks5h://127.0.0.1:9050'}
