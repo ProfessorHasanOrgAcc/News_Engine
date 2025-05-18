@@ -99,7 +99,7 @@ def rotate_tor_ip(max_retries=5, wait_time=10):
     print("[ERROR] Failed to rotate Tor IP after max retries.")
     raise Exception("Tor IP rotation failed.")
 #---------------------------------------------------------------------------------------------------------------------------
-def get_top_trending_queries(limit=100, max_checks=70):
+def get_top_trending_queries(limit=100, max_checks=100):
     scores = []
     queries = [f"{country} {phrase}" for country, phrase_list in country_phrase_map.items() for phrase in phrase_list]
     
