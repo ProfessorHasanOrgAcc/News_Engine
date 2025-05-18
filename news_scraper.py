@@ -226,16 +226,18 @@ def main():
         entries = country_articles[country]
         if entries:
             for idx, entry in enumerate(entries, 1):
-                publishedAt, title, url, _, _, topic = entry
-                news_summary += "</body></html>"
-                  <p>
-                    <strong>{idx}. [{topic}] {publishedAt}</strong><br>
-                    <b>{title}</b><br>
-                    <a href="{url}">{url}</a><br>
-                if entry[-1]:  # If summary exists
-                    news_summary += f"    📝 {entry[-1]}<br>"
+                publishedAt, title, url, _, _, topic, summary = entry
+                news_summary += f"""
+                    <p>
+                      <strong>{idx}. [{topic}] {publishedAt}</strong><br>
+                      <b>{title}</b><br>
+                      🔗 <a href="{url}">{url}</a><br>
+                """
+                if summary:
+                    news_summary += f"      📝 {summary}<br>"
+                news_summary += "</p>"
         else:
-            news_summary += "  No news found.\n"
+            news_summary += "<p>No news found.</p>"
 
     # Save as CSV
     filename = f"news_{now}.csv"
