@@ -127,7 +127,7 @@ def get_top_trending_queries(limit=100, max_checks=100):
             print(f"[WARN] {query} failed: {e}")
         
         # Random delay
-        time.sleep(random.uniform(5, 10))
+        time.sleep(random.uniform(15, 25))
         
         # Rotate Tor IP every 5 queries
         if (idx + 1) % 5 == 0:
