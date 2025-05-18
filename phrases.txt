@@ -1,8 +1,8 @@
-limestone
-clinker tariff
-bulk shipping
-domestic cement consumption
-clinker shortage
-energy price
-coal price
-port congestion
+Thailand: limestone, clinker shortage, coal price, port congestion, domestic cement consumption, bulk shipping, energy price, clinker tariff
+Indonesia: limestone, clinker shortage, coal price, port congestion, domestic cement consumption, bulk shipping, energy price, clinker tariff
+Vietnam: limestone, clinker shortage, coal price, port congestion, domestic cement consumption, bulk shipping, energy price, clinker tariff
+Oman: Gypsum, limestone, clinker shortage, coal price, port congestion, domestic cement consumption, bulk shipping, energy price, clinker tariff
+Pakistan: limestone, clinker shortage, coal price, port congestion, domestic cement consumption, bulk shipping, energy price, clinker tariff
+China: limestone, Granulated Blast Furnace Slag, clinker shortage, coal price, port congestion, domestic cement consumption, bulk shipping, energy price, clinker tariff
+Japan: Granulated Blast Furnace Slag, port congestion, domestic cement consumption, bulk shipping, energy price
+United Arab Emirates: limestone, Gypsum, clinker shortage, coal price, port congestion, domestic cement consumption, bulk shipping, energy price, clinker tariff
