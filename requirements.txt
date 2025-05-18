@@ -5,3 +5,4 @@ schedule           # For optional local scheduling
 pytrends           # For fetching Google Trends data
 requests[socks]    # Needed for SOCKS5 proxy support via Tor
 stem               # For Tor controller support (IP rotation, etc.)
+newspaper3k        #For news summary
