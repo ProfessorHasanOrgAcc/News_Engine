@@ -122,7 +122,7 @@ def get_news(query):
             "apiKey": API_KEY,
             "sortBy": "publishedAt",
             "language": "en",
-            "pageSize": 3
+            "pageSize": 2
         })
         response.raise_for_status()
         return response.json().get("articles", [])
