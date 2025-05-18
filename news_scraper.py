@@ -232,8 +232,6 @@ def main():
                     <strong>{idx}. [{topic}] {publishedAt}</strong><br>
                     <b>{title}</b><br>
                     <a href="{url}">{url}</a><br>
-                """
-
                 if entry[-1]:  # If summary exists
                     news_summary += f"    📝 {entry[-1]}<br>"
         else:
