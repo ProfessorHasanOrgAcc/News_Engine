@@ -125,10 +125,10 @@ def get_top_trending_queries(limit=100, max_checks=70):
             print(f"[WARN] {query} failed: {e}")
         
         # Random delay
-        time.sleep(random.uniform(10, 18))
+        time.sleep(random.uniform(5, 12))
         
         # Rotate Tor IP every 10 queries
-        if (idx + 1) % 10 == 0:
+        if (idx + 1) % 5 == 0:
             rotate_tor_ip()
             ip = requests.get('http://httpbin.org/ip', proxies=proxies).json()
             print("[DEBUG] Current IP via Tor:", ip)
