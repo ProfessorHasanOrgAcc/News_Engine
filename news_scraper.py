@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 from pytrends.request import TrendReq
 from stem import Signal
 from stem.control import Controller
-from collections import defaultdict
 import nltk
 nltk.download('punkt')
 from newspaper import Article
@@ -41,9 +40,6 @@ if missing_vars:
 BASE_URL = "https://newsapi.org/v2/everything"
 
 
-# Initialize pytrends with Tor
-proxy_list = ['socks5h://127.0.0.1:9050']
-pytrends = TrendReq(proxies=proxy_list, timeout=(20, 40))  # (connect, read)
 #---------------------------------------------------------------------------------------------------------------------------
 def load_country_phrases(filepath="phrases.txt"):
     country_phrase_map = defaultdict(list)
@@ -57,10 +53,17 @@ def load_country_phrases(filepath="phrases.txt"):
     except FileNotFoundError:
         print(f"[ERROR] Could not find {filepath}.")
     return country_phrase_map
+#---------------------------------------------------------------------------------------------------------------------------
 
 # Load country-phrase mapping
 country_phrase_map = load_country_phrases()
 countries = list(country_phrase_map.keys())
+
+
+# Initialize pytrends with Tor
+proxy_list = ['socks5h://127.0.0.1:9050']
+pytrends = TrendReq(proxies=proxy_list, timeout=(20, 40))  # (connect, read)
+
 #---------------------------------------------------------------------------------------------------------------------------
 def get_current_tor_ip(timeout=10):
     proxies = {'http': 'socks5h://127.0.0.1:9050', 'https': 'socks5h://127.0.0.1:9050'}
@@ -122,7 +125,7 @@ def get_top_trending_queries(limit=100, max_checks=70):
             print(f"[WARN] {query} failed: {e}")
         
         # Random delay
-        time.sleep(random.uniform(10, 25))
+        time.sleep(random.uniform(10, 18))
         
         # Rotate Tor IP every 10 queries
         if (idx + 1) % 10 == 0:
@@ -133,8 +136,6 @@ def get_top_trending_queries(limit=100, max_checks=70):
     sorted_queries = sorted(scores, key=lambda x: x[1], reverse=True)[:limit]
     return [q for q, _ in sorted_queries]
 
-
-from datetime import datetime, timedelta
 #---------------------------------------------------------------------------------------------------------------------------
 def get_news(query):
     # Limit to past n days
