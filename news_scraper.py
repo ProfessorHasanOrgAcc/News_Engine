@@ -181,6 +181,8 @@ def summarize_article(url):
         return None
 #---------------------------------------------------------------------------------------------------------------------------
 def send_email(content):
+    
+    recipients = [email.strip() for email in EMAIL_TO.split(",") if email.strip()]
     msg = MIMEText(content, "html", "utf-8")
     msg["Subject"] = "📰 Daily Cement News Summary"
     msg["From"] = EMAIL_USER
@@ -200,9 +202,9 @@ def main():
     news_summary = f"""
     <html>
       <body>
-        <h2>🗓 News Summary for {now}</h2>
-        <p>
-          <h3>This is an automated mail generated to inform the user regarding key market insights.</h3>
+        <h1>🗓 News Summary for {now}</h1>
+        <p style="font-size: 14px; color: #555;">
+          This is an automated mail generated to inform the user regarding key market insights.<br>
         </p>
     """
     all_articles = []
@@ -234,16 +236,16 @@ def main():
 
     # Organizing news summaries by country
     for country in countries:
-        news_summary += f"""\n <h3>{country} </h3>\n"""
+        news_summary += f"""\n <h2>{country} </h2>\n"""
         entries = country_articles[country]
         if entries:
             for idx, entry in enumerate(entries, 1):
                 publishedAt, title, url, _, _, topic, summary = entry
                 news_summary += f"""
                     <p>
-                      <strong>{idx}. <b>{title}</b></strong><br>
+                      <h3>{idx}. {title} </h3><br>
                       [{topic}] {publishedAt}<br>
-                      🔗 <a href="{url}">{url}</a><br>
+                      🔗 <a href="{url}" style="font-size: 0.9em; color: #555;">Read full article</a><br>
                 """
                 if summary:
                     news_summary += f"      📝 {summary}<br>"
