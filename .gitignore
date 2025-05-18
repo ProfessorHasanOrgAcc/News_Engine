@@ -24,7 +24,9 @@ Thumbs.db
 
 # Output data
 *.csv
-!news_*.csv   # Allow only news_*.csv files to be tracked
+output/*
+!news_*.csv   
+!output/news_*.csv# Allow only news_*.csv files to be tracked
 
 # Virtual environments
 .venv/
