@@ -12,7 +12,11 @@ from pytrends.request import TrendReq
 from stem import Signal
 from stem.control import Controller
 from collections import defaultdict
-
+import nltk
+nltk.download('punkt')
+from newspaper import Article
+from collections import defaultdict
+---------------------------------------------------------------------------------------------------------------------------
 # Load environment variables from .env file (useful for local testing)
 load_dotenv()
 
@@ -36,8 +40,15 @@ if missing_vars:
 
 BASE_URL = "https://newsapi.org/v2/everything"
 
-from collections import defaultdict
+# Load country-phrase mapping
+country_phrase_map = load_country_phrases()
+countries = list(country_phrase_map.keys())
 
+
+# Initialize pytrends with Tor
+proxy_list = ['socks5h://127.0.0.1:9050']
+pytrends = TrendReq(proxies=proxy_list, timeout=(20, 40))  # (connect, read)
+---------------------------------------------------------------------------------------------------------------------------
 def load_country_phrases(filepath="phrases.txt"):
     country_phrase_map = defaultdict(list)
     try:
@@ -50,16 +61,7 @@ def load_country_phrases(filepath="phrases.txt"):
     except FileNotFoundError:
         print(f"[ERROR] Could not find {filepath}.")
     return country_phrase_map
-
-# Load country-phrase mapping
-country_phrase_map = load_country_phrases()
-countries = list(country_phrase_map.keys())
-
-
-# Initialize pytrends with Tor
-proxy_list = ['socks5h://127.0.0.1:9050']
-pytrends = TrendReq(proxies=proxy_list, timeout=(20, 40))  # (connect, read)
-
+---------------------------------------------------------------------------------------------------------------------------
 def get_current_tor_ip(timeout=10):
     proxies = {'http': 'socks5h://127.0.0.1:9050', 'https': 'socks5h://127.0.0.1:9050'}
     
@@ -68,7 +70,7 @@ def get_current_tor_ip(timeout=10):
     except Exception as e:
         print(f"[WARN] Failed to fetch current IP: {e}")
         return None
-
+---------------------------------------------------------------------------------------------------------------------------
 def rotate_tor_ip(max_retries=5, wait_time=10):
     old_ip = get_current_tor_ip()
     if old_ip is None:
@@ -93,8 +95,8 @@ def rotate_tor_ip(max_retries=5, wait_time=10):
 
     print("[ERROR] Failed to rotate Tor IP after max retries.")
     raise Exception("Tor IP rotation failed.")
-
-def get_top_trending_queries(limit=50, max_checks=70):
+---------------------------------------------------------------------------------------------------------------------------
+def get_top_trending_queries(limit=100, max_checks=70):
     scores = []
     queries = [f"{country} {phrase}" for country, phrase_list in country_phrase_map.items() for phrase in phrase_list]
     
@@ -132,26 +134,42 @@ def get_top_trending_queries(limit=50, max_checks=70):
     return [q for q, _ in sorted_queries]
 
 
+from datetime import datetime, timedelta
+---------------------------------------------------------------------------------------------------------------------------
 def get_news(query):
+    # Limit to past n days
+    from_date = (datetime.utcnow() - timedelta(days=3)).strftime("%Y-%m-%d")
+    to_date = datetime.utcnow().strftime("%Y-%m-%d")
+    
     try:
         response = requests.get(BASE_URL, params={
             "q": query,
             "apiKey": API_KEY,
             "sortBy": "publishedAt",
             "language": "en",
-            "pageSize": 2
+            "pageSize": 2,
+            "from": from_date,
+            "to": to_date
         })
         response.raise_for_status()
         return response.json().get("articles", [])
     except requests.RequestException as e:
         print(f"Error: Failed to fetch news for '{query}': {e}")
         return []
-
-
-
-
+---------------------------------------------------------------------------------------------------------------------------
+def summarize_article(url):
+    try:
+        article = Article(url)
+        article.download()
+        article.parse()
+        article.nlp()
+        return article.summary
+    except Exception as e:
+        print(f"[WARN] Failed to summarize article: {url} | Reason: {e}")
+        return None
+---------------------------------------------------------------------------------------------------------------------------
 def send_email(content):
-    msg = MIMEText(content, "plain", "utf-8")
+    msg = MIMEText(content, "html", "utf-8")
     msg["Subject"] = "📰 Daily Cement News Summary"
     msg["From"] = EMAIL_USER
     msg["To"] = EMAIL_TO
@@ -164,16 +182,22 @@ def send_email(content):
         print("[INFO] Email sent successfully.")
     except Exception as e:
         print(f"[ERROR] Failed to send email: {e}")
-
+---------------------------------------------------------------------------------------------------------------------------
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    news_summary = f" 🗓 News Summary for {now}\n 
-This is an automated mail generated with the intent of informing the user regarding key market insights \n"
+    news_summary = f"""
+    <html>
+      <body>
+        <h3>🗓 News Summary for {now}</h3>
+        <p>
+          This is an automated mail generated to inform the user regarding key market insights.
+        </p>
+    """
     all_articles = []
     country_articles = {country: [] for country in countries}
 
     # Get the top 25 trending queries
-    top_queries = get_top_trending_queries(limit=25)
+    top_queries = get_top_trending_queries(limit=100)
 
     # Fetch news for the top trending queries
     for query in top_queries:
@@ -186,7 +210,10 @@ This is an automated mail generated with the intent of informing the user regard
             url = article.get("url", "")
             source = article.get("source", {}).get("name", "")
             topic = query.replace(matched_country, '').strip()
-            entry = (publishedAt, title, url, source, matched_country, topic)
+    
+            summary = summarize_article(url)
+            entry = (publishedAt, title, url, source, matched_country, topic, summary or "")
+    
             country_articles[matched_country].append(entry)
             all_articles.append(entry)
         
@@ -200,7 +227,15 @@ This is an automated mail generated with the intent of informing the user regard
         if entries:
             for idx, entry in enumerate(entries, 1):
                 publishedAt, title, url, _, _, topic = entry
-                news_summary += f"  {idx}. [{topic}] {publishedAt} | {title} | {url}\n"
+                news_summary += "</body></html>"
+                  <p>
+                    <strong>{idx}. [{topic}] {publishedAt}</strong><br>
+                    <b>{title}</b><br>
+                    🔗 <a href="{url}">{url}</a><br>
+                """
+
+                if entry[-1]:  # If summary exists
+                    news_summary += f"    📝 {entry[-1]}<br>"
         else:
             news_summary += "  No news found.\n"
 
@@ -208,7 +243,7 @@ This is an automated mail generated with the intent of informing the user regard
     filename = f"news_{now}.csv"
     with open(filename, mode="w", newline='', encoding="utf-8") as file:
         writer = csv.writer(file)
-        writer.writerow(["PublishedAt", "Title", "Source", "URL", "Country", "Topic"])
+        writer.writerow(["PublishedAt", "Title", "Source", "URL", "Country", "Topic", "Summary"])
         for entry in all_articles:
             writer.writerow(entry)
 
