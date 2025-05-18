@@ -16,7 +16,7 @@ import nltk
 nltk.download('punkt')
 from newspaper import Article
 from collections import defaultdict
----------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 # Load environment variables from .env file (useful for local testing)
 load_dotenv()
 
@@ -48,7 +48,7 @@ countries = list(country_phrase_map.keys())
 # Initialize pytrends with Tor
 proxy_list = ['socks5h://127.0.0.1:9050']
 pytrends = TrendReq(proxies=proxy_list, timeout=(20, 40))  # (connect, read)
----------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 def load_country_phrases(filepath="phrases.txt"):
     country_phrase_map = defaultdict(list)
     try:
@@ -61,7 +61,7 @@ def load_country_phrases(filepath="phrases.txt"):
     except FileNotFoundError:
         print(f"[ERROR] Could not find {filepath}.")
     return country_phrase_map
----------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 def get_current_tor_ip(timeout=10):
     proxies = {'http': 'socks5h://127.0.0.1:9050', 'https': 'socks5h://127.0.0.1:9050'}
     
@@ -70,7 +70,7 @@ def get_current_tor_ip(timeout=10):
     except Exception as e:
         print(f"[WARN] Failed to fetch current IP: {e}")
         return None
----------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 def rotate_tor_ip(max_retries=5, wait_time=10):
     old_ip = get_current_tor_ip()
     if old_ip is None:
@@ -95,7 +95,7 @@ def rotate_tor_ip(max_retries=5, wait_time=10):
 
     print("[ERROR] Failed to rotate Tor IP after max retries.")
     raise Exception("Tor IP rotation failed.")
----------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 def get_top_trending_queries(limit=100, max_checks=70):
     scores = []
     queries = [f"{country} {phrase}" for country, phrase_list in country_phrase_map.items() for phrase in phrase_list]
@@ -135,7 +135,7 @@ def get_top_trending_queries(limit=100, max_checks=70):
 
 
 from datetime import datetime, timedelta
----------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 def get_news(query):
     # Limit to past n days
     from_date = (datetime.utcnow() - timedelta(days=3)).strftime("%Y-%m-%d")
@@ -156,7 +156,7 @@ def get_news(query):
     except requests.RequestException as e:
         print(f"Error: Failed to fetch news for '{query}': {e}")
         return []
----------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 def summarize_article(url):
     try:
         article = Article(url)
@@ -167,7 +167,7 @@ def summarize_article(url):
     except Exception as e:
         print(f"[WARN] Failed to summarize article: {url} | Reason: {e}")
         return None
----------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 def send_email(content):
     msg = MIMEText(content, "html", "utf-8")
     msg["Subject"] = "📰 Daily Cement News Summary"
@@ -182,7 +182,7 @@ def send_email(content):
         print("[INFO] Email sent successfully.")
     except Exception as e:
         print(f"[ERROR] Failed to send email: {e}")
----------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     news_summary = f"""
