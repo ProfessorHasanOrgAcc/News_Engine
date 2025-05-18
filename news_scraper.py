@@ -231,7 +231,7 @@ def main():
                   <p>
                     <strong>{idx}. [{topic}] {publishedAt}</strong><br>
                     <b>{title}</b><br>
-                    🔗 <a href="{url}">{url}</a><br>
+                    <a href="{url}">{url}</a><br>
                 """
 
                 if entry[-1]:  # If summary exists
