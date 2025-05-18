@@ -189,9 +189,9 @@ def main():
     news_summary = f"""
     <html>
       <body>
-        <h3>🗓 News Summary for {now}</h3>
+        <h2>🗓 News Summary for {now}</h2>
         <p>
-          This is an automated mail generated to inform the user regarding key market insights.
+          <h3>This is an automated mail generated to inform the user regarding key market insights.</h3>
         </p>
     """
     all_articles = []
@@ -230,8 +230,8 @@ def main():
                 publishedAt, title, url, _, _, topic, summary = entry
                 news_summary += f"""
                     <p>
-                      <strong>{idx}. [{topic}] {publishedAt}</strong><br>
-                      <b>{title}</b><br>
+                      <strong>{idx}. <b>{title}</b></strong><br>
+                      [{topic}] {publishedAt}<br>
                       🔗 <a href="{url}">{url}</a><br>
                 """
                 if summary:
