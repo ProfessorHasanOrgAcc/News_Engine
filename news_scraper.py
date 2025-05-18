@@ -36,8 +36,8 @@ if missing_vars:
 BASE_URL = "https://newsapi.org/v2/everything"
 
 countries = ["Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China", "Japan"]
-phrases = ["limestone export regulation", "clinker export tariff", "bulk shipping", "cement domestic consumption", 
-           "cement input shortage", "cement energy subsidy", "energy policy", "fuel price hike", "port congestion"]
+phrases = ["limestone", "clinker tariff", "bulk shipping", "domestic cement consumption", 
+           "clinker shortage", "energy price", "coal price", "port congestion"]
 
 # Initialize pytrends with Tor
 proxy_list = ['socks5h://127.0.0.1:9050']
@@ -79,7 +79,7 @@ def rotate_tor_ip(max_retries=5, wait_time=10):
 
 def get_top_trending_queries(limit=25, max_checks=70):
     scores = []
-    queries = [f"{phrase} {country}" for country in countries for phrase in phrases]
+    queries = [f"{country} {phrase}" for country in countries for phrase in phrases]
     
     # Randomize queries
     random.shuffle(queries)
