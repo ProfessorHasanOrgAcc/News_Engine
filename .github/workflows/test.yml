@@ -1,2 +1,0 @@
-- name: Generate Hashed Tor Control Password
-  run: tor --hash-password "my_secure_password_2025"
