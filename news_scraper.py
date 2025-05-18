@@ -57,6 +57,8 @@ def load_country_phrases(filepath="phrases.txt"):
 
 # Load country-phrase mapping
 country_phrase_map = load_country_phrases()
+if not country_phrase_map:
+    raise ValueError("No phrases loaded. Ensure 'phrases.txt' contains valid entries.")
 countries = list(country_phrase_map.keys())
 
 
@@ -253,4 +255,17 @@ def main():
     send_email(news_summary)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        error_msg = f"""
+        <html>
+          <body>
+            <h2>🚨 Script Failure</h2>
+            <p><strong>Error:</strong> {str(e)}</p>
+            <p>Please check logs or code for debugging.</p>
+          </body>
+        </html>
+        """
+        send_email(error_msg)
+        raise
