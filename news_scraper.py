@@ -223,7 +223,7 @@ def main():
 
     # Organizing news summaries by country
     for country in countries:
-        news_summary += f"\n{country}\n"
+        news_summary += f"""\n <h3>{country} </h3>\n"""
         entries = country_articles[country]
         if entries:
             for idx, entry in enumerate(entries, 1):
@@ -241,6 +241,7 @@ def main():
             news_summary += "<p>No news found.</p>"
 
     # Save as CSV
+    os.makedirs("output", exist_ok=True)
     filename = f"news_{now}.csv"
     with open(filename, mode="w", newline='', encoding="utf-8") as file:
         writer = csv.writer(file)
