@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from pytrends.request import TrendReq
 from stem import Signal
 from stem.control import Controller
+from collections import defaultdict
 
 # Load environment variables from .env file (useful for local testing)
 load_dotenv()
@@ -35,9 +36,25 @@ if missing_vars:
 
 BASE_URL = "https://newsapi.org/v2/everything"
 
-countries = ["Thailand", "Indonesia", "Vietnam", "Oman", "Pakistan", "China", "Japan"]
-phrases = ["limestone", "clinker tariff", "bulk shipping", "domestic cement consumption", 
-           "clinker shortage", "energy price", "coal price", "port congestion"]
+from collections import defaultdict
+
+def load_country_phrases(filepath="phrases.txt"):
+    country_phrase_map = defaultdict(list)
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            for line in f:
+                if ':' in line:
+                    country, phrase_str = line.strip().split(":", 1)
+                    phrases = [p.strip() for p in phrase_str.split(",") if p.strip()]
+                    country_phrase_map[country.strip()].extend(phrases)
+    except FileNotFoundError:
+        print(f"[ERROR] Could not find {filepath}.")
+    return country_phrase_map
+
+# Load country-phrase mapping
+country_phrase_map = load_country_phrases()
+countries = list(country_phrase_map.keys())
+
 
 # Initialize pytrends with Tor
 proxy_list = ['socks5h://127.0.0.1:9050']
@@ -77,9 +94,9 @@ def rotate_tor_ip(max_retries=5, wait_time=10):
     print("[ERROR] Failed to rotate Tor IP after max retries.")
     raise Exception("Tor IP rotation failed.")
 
-def get_top_trending_queries(limit=25, max_checks=70):
+def get_top_trending_queries(limit=50, max_checks=70):
     scores = []
-    queries = [f"{country} {phrase}" for country in countries for phrase in phrases]
+    queries = [f"{country} {phrase}" for country, phrase_list in country_phrase_map.items() for phrase in phrase_list]
     
     # Randomize queries
     random.shuffle(queries)
@@ -150,7 +167,8 @@ def send_email(content):
 
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    news_summary = f" 🗓 News Summary for {now}\n"
+    news_summary = f" 🗓 News Summary for {now}\n 
+This is an automated mail generated with the intent of informing the user regarding key market insights \n"
     all_articles = []
     country_articles = {country: [] for country in countries}
 
