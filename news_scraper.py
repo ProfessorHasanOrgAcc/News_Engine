@@ -150,7 +150,7 @@ def get_top_trending_queries(limit=100, max_checks=100):
 #---------------------------------------------------------------------------------------------------------------------------
 def get_news(query):
     # Limit to past n days
-    from_date = (datetime.utcnow() - timedelta(days=3)).strftime("%Y-%m-%d")
+    from_date = (datetime.utcnow() - timedelta(days=15)).strftime("%Y-%m-%d")
     to_date = datetime.utcnow().strftime("%Y-%m-%d")
     
     try:
@@ -243,7 +243,7 @@ def main():
                 publishedAt, title, url, _, _, topic, summary = entry
                 news_summary += f"""
                     <p>
-                      <h3>{idx}. {title} </h3><br>
+                      <h3>{idx}. {title} </h3>
                       [{topic}] {publishedAt}<br>
                       🔗 <a href="{url}" style="font-size: 0.9em; color: #555;">Read full article</a><br>
                 """
