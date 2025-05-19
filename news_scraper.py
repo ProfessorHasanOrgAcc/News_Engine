@@ -111,8 +111,22 @@ def rotate_tor_ip(max_retries=5, wait_time=10):
     raise Exception("Tor IP rotation failed.")
 #---------------------------------------------------------------------------------------------------------------------------
 def get_top_trending_queries(limit=100, max_checks=100):
+    max_retries = 3
     scores = []
     queries = [f"{country} {phrase}" for country, phrase_list in country_phrase_map.items() for phrase in phrase_list]
+
+    country_code_map = {
+        "Bangladesh": "BD",
+        "India": "IN",
+        "Vietnam": "VN",
+        "Indonesia": "ID",
+        "Pakistan": "PK",
+        "Thailand": "TH",
+        "Sri Lanka": "LK",
+        "Philippines": "PH",
+        "Oman": "OM",
+        "United Arab Emirates": "AE"
+    }
     
     # Randomize queries
     random.shuffle(queries)
@@ -122,18 +136,39 @@ def get_top_trending_queries(limit=100, max_checks=100):
 
     for idx, query in enumerate(queries[:max_checks]):
         print(f"[INFO] Checking {idx+1}/{max_checks} → {query}")
+
+        # Extract country from query prefix (assumes first word is country name)
+        matched_country = next((c for c in country_code_map if query.lower().startswith(c.lower())), None)
+        geo_code = country_code_map.get(matched_country, "")
+
         
-        try:
-            pytrends.build_payload([query], timeframe='now 1-d')
-            interest = pytrends.interest_over_time()
+        retries = 0
+        while retries < max_retries:
+            try:
+                pytrends.build_payload([query], timeframe='now 1-d', geo=geo_code)
+                interest = pytrends.interest_over_time()
+                
+                # Check if interest data exists and has positive values
+                if not interest.empty and interest[query].sum() > 0:
+                    avg_score = interest[query].mean()
+                    scores.append((query, avg_score))
+                    print(f"[INFO] {query} ⟶ {avg_score:.2f} (geo={geo_code})")
+                else:
+                    print(f"[INFO] {query} has no trend data in {geo_code or 'global'}")
+                break # exit retry loop on success
             
-            if not interest.empty:
-                avg_score = interest[query].mean()
-                scores.append((query, avg_score))
-                print(f"[INFO] {query} ⟶ {avg_score:.2f}")
-            
-        except Exception as e:
-            print(f"[WARN] {query} failed: {e}")
+            except Exception as e:
+                # Check if 429 error in the exception message or type (adjust as needed)
+                if '429' in str(e) or 'Too Many Requests' in str(e):
+                    retries += 1
+                    print(f"[WARN] Rate limited on {query}, rotating IP and retrying ({retries}/{max_retries})...")
+                    rotate_tor_ip()
+                    ip = requests.get('http://httpbin.org/ip', proxies=proxies).json()
+                    print("[DEBUG] Current IP via Tor:", ip)
+                    time.sleep(random.uniform(10, 20))  # wait a bit before retrying
+                else:
+                    print(f"[WARN] {query} failed: {e}")
+                    break  # some other error, exit retry loop
         
         # Random delay
         time.sleep(random.uniform(15, 25))
