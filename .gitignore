@@ -22,12 +22,6 @@ Thumbs.db
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
-# Output data
-*.csv
-output/*
-!news_*.csv   
-!output/news_*.csv# Allow only news_*.csv files to be tracked
-
 # Virtual environments
 .venv/
 env/
