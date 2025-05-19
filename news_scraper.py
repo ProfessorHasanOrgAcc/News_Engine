@@ -254,13 +254,13 @@ def main():
             news_summary += "<p>No news found.</p>"
 
     # Save as CSV
-    os.makedirs("output", exist_ok=True)
-    filename = f"news_{now}.csv"
-    with open(filename, mode="w", newline='', encoding="utf-8") as file:
-        writer = csv.writer(file)
-        writer.writerow(["PublishedAt", "Title", "Source", "URL", "Country", "Topic", "Summary"])
-        for entry in all_articles:
-            writer.writerow(entry)
+    #os.makedirs("output", exist_ok=True)
+    #filename = f"news_{now}.csv"
+    #with open(filename, mode="w", newline='', encoding="utf-8") as file:
+    #    writer = csv.writer(file)
+    #    writer.writerow(["PublishedAt", "Title", "Source", "URL", "Country", "Topic", "Summary"])
+    #    for entry in all_articles:
+    #        writer.writerow(entry)
 
     # Send the email
     send_email(news_summary)
