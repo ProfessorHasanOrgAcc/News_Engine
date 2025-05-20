@@ -32,13 +32,26 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-
+            
+      - name: Set NLTK_DATA env
+        run: echo "NLTK_DATA=/home/runner/nltk_data" >> $GITHUB_ENV
+        
+      - name: Download NLTK data
+        run: |
+          python -c "
+          import nltk
+          for pkg in ['punkt', 'punkt_tab', 'stopwords', 'wordnet', 'averaged_perceptron_tagger']:
+              nltk.download(pkg)
+          "
       - name: Cache NLTK data
         uses: actions/cache@v3
         with:
-          path: ~/.cache/nltk
-          key: ${{ runner.os }}-nltk-punkt
+          path: ~/nltk_data
+          key: ${{ runner.os }}-nltk-data-${{ hashFiles('**/*.py') }}
           
+      - name: Set NLTK_DATA env
+        run: echo "NLTK_DATA=/home/runner/nltk_data" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 
@@ -51,7 +64,7 @@ jobs:
           echo "CookieAuthentication 0" | sudo tee -a /etc/tor/torrc
           sudo service tor restart
           sleep 10  # Give Tor a moment to initialize
-
+      
 
       - name: Run scraper
         run: python news_scraper.py
