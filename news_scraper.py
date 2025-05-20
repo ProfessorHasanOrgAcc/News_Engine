@@ -15,14 +15,9 @@ from newspaper import Article
 from collections import defaultdict
 import nltk
 
-nltk.download('punkt')
-
-# Make sure NLTK data is available in a custom path
-nltk_data_dir = os.path.join(os.getcwd(), "nltk_data")
-nltk.download('punkt', download_dir=nltk_data_dir)
-
-# Set environment variable so newspaper3k can find it
-os.environ['NLTK_DATA'] = nltk_data_dir
+# Set the path if the environment variable is defined
+if 'NLTK_DATA' in os.environ:
+    nltk.data.path.append(os.environ['NLTK_DATA'])
 
 #---------------------------------------------------------------------------------------------------------------------------
 # Load environment variables from .env file (useful for local testing)
