@@ -204,8 +204,11 @@ def summarize_article(url):
         article = Article(url)
         article.download()
         article.parse()
-        article.nlp()
-        return article.summary
+        try:
+            article.nlp()
+            return article.summary
+        except:
+            return article.text[:400]
     except Exception as e:
         print(f"[WARN] Failed to summarize article: {url} | Reason: {e}")
         return None
@@ -216,7 +219,7 @@ def send_email(content):
     msg = MIMEText(content, "html", "utf-8")
     msg["Subject"] = "📰 Daily Cement News Summary"
     msg["From"] = EMAIL_USER
-    msg["To"] = EMAIL_TO
+    msg["To"] = ", ".join(recipients)
 
     try:
         with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
@@ -255,7 +258,7 @@ def main():
             source = article.get("source", {}).get("name", "")
             topic = query.replace(matched_country, '').strip()
     
-            summary = summarize_article(url)
+            summary = summarize_article(URL, max words=100)
             entry = (publishedAt, title, url, source, matched_country, topic, summary or "")
     
             country_articles[matched_country].append(entry)
