@@ -24,7 +24,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.x
-          
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        
       - name: Cache Python packages
         uses: actions/cache@v3
         with:
@@ -51,9 +54,6 @@ jobs:
           
       - name: Set NLTK_DATA env
         run: echo "NLTK_DATA=/home/runner/nltk_data" >> $GITHUB_ENV
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
 
       - name: Install and configure Tor (HashedControlPassword)
         run: |
