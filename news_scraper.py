@@ -258,7 +258,7 @@ def main():
             source = article.get("source", {}).get("name", "")
             topic = query.replace(matched_country, '').strip()
     
-            summary = summarize_article(URL, max words=100)
+            summary = summarize_article(url)
             entry = (publishedAt, title, url, source, matched_country, topic, summary or "")
     
             country_articles[matched_country].append(entry)
