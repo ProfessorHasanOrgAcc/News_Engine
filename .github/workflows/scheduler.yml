@@ -73,5 +73,7 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+          git add news_cache/*.pkl  # <-- Add this line
           git commit -m "Add news data $(date -u)" || echo "No changes to commit"
           git push
+
