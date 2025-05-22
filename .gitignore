@@ -20,6 +20,9 @@ Thumbs.db
 .idea/
 
 !news_cache/*.pkl
+# Keep empty cache directory
+news_cache/*
+!news_cache/.keep
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
