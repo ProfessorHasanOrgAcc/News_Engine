@@ -5,6 +5,6 @@ schedule           # For optional local scheduling
 pytrends           # For fetching Google Trends data
 requests[socks]    # Needed for SOCKS5 proxy support via Tor
 stem               # For Tor controller support (IP rotation, etc.)
-nltk
-newspaper3k        #For news summary
-lxml_html_clean
+nltk               # For natural language processing (e.g., tokenization, stopword removal)
+newspaper3k        # For news summary
+lxml_html_clean    # For HTML parsing and cleanup (used by newspaper3k and others)
