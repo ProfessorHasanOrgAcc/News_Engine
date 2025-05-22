@@ -6,6 +6,7 @@ import pandas as pd
 import random
 import time
 import json
+import pickle
 from email.mime.text import MIMEText
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
@@ -14,7 +15,12 @@ from stem import Signal
 from stem.control import Controller
 from newspaper import Article
 from collections import defaultdict
+from collections import deque
 import nltk
+
+CACHE_DIR = "news_cache"
+CACHE_FILENAME = "current.pkl"
+MAX_CACHE_SIZE = 100
 
 # Set the path if the environment variable is defined
 if 'NLTK_DATA' in os.environ:
@@ -231,6 +237,64 @@ def send_email(content):
     except Exception as e:
         print(f"[ERROR] Failed to send email: {e}")
 #---------------------------------------------------------------------------------------------------------------------------
+def update_and_filter_news_cache(new_articles):
+    """
+    Filters out duplicate news entries based on the last 100 links.
+    Maintains a persistent cache file using pickle.
+    Archives old entries quarterly.
+    
+    Each entry is a tuple: (date, country, topic, title, url)
+    """
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    cache_path = os.path.join(CACHE_DIR, CACHE_FILENAME)
+    
+    # Load existing cache
+    if os.path.exists(cache_path):
+        with open(cache_path, "rb") as f:
+            cache = pickle.load(f)
+    else:
+        cache = []
+
+    # Archive old entries by quarter
+    archived = []
+    keep = []
+    for entry in cache:
+        date_str = entry[0]  # assume format YYYY-MM-DD
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        if (datetime.now() - date_obj).days > 90:
+            quarter = (date_obj.month - 1) // 3 + 1
+            archive_file = f"Q{quarter}-{date_obj.year}.pkl"
+            archive_path = os.path.join(CACHE_DIR, archive_file)
+            if not os.path.exists(archive_path):
+                with open(archive_path, "wb") as af:
+                    pickle.dump([entry], af)
+            else:
+                with open(archive_path, "rb") as af:
+                    archive_data = pickle.load(af)
+                archive_data.append(entry)
+                with open(archive_path, "wb") as af:
+                    pickle.dump(archive_data, af)
+            archived.append(entry)
+        else:
+            keep.append(entry)
+
+    cache = keep
+
+    # Build a set of last 100 URLs to check for duplicates
+    recent_urls = set(entry[4] for entry in cache[-MAX_CACHE_SIZE:])
+
+    # Filter new articles
+    filtered_articles = [entry for entry in new_articles if entry[4] not in recent_urls]
+
+    # Update cache with new entries
+    cache.extend(filtered_articles)
+
+    # Save updated cache
+    with open(cache_path, "wb") as f:
+        pickle.dump(cache, f)
+
+    return filtered_articles
+#---------------------------------------------------------------------------------------------------------------------------
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     news_summary = f"""
@@ -241,34 +305,37 @@ def main():
           This is an automated mail generated to inform the user regarding key market insights.<br>
         </p>
     """
-    all_articles = []
-    country_articles = {country: [] for country in countries}
+    raw_articles = []
 
-    # Get the top 25 trending queries
+    # Step 1: Get top queries
     top_queries = get_top_trending_queries(limit=100)
 
-    # Fetch news for the top trending queries
+    # Step 2: Fetch news articles for each query
     for query in top_queries:
-        # Fetching news
         articles = get_news(query)
         matched_country = next((c for c in countries if c.lower() in query.lower()), "Unknown")
+        topic = query.replace(matched_country, '').strip()
+
         for article in articles:
-            publishedAt = article.get("publishedAt", "")
+            publishedAt = article.get("publishedAt", "")[:10]
             title = article.get("title", "")
             url = article.get("url", "")
-            source = article.get("source", {}).get("name", "")
-            topic = query.replace(matched_country, '').strip()
-    
-            summary = summarize_article(url)
-            entry = (publishedAt, title, url, source, matched_country, topic, summary or "")
-    
-            country_articles[matched_country].append(entry)
-            all_articles.append(entry)
-        
-        # Adding random delay between requests (between 1 and 3 seconds)
-        time.sleep(random.uniform(1, 3))
+            raw_articles.append((publishedAt, matched_country, topic, title, url))
 
-    # Organizing news summaries by country
+        time.sleep(random.uniform(1, 3))  # polite delay between requests
+
+    # Step 3: Filter and update cache
+    filtered_articles = update_and_filter_news_cache(raw_articles)
+
+    # Step 4: Summarize and organize news by country
+    country_articles = {country: [] for country in countries}
+    for article in filtered_articles:
+        date, country, topic, title, url = article
+        summary = summarize_article(url)
+        entry = (date, title, url, "", country, topic, summary)
+        country_articles[country].append(entry)
+
+    # Step 5: Build email HTML
     for country in countries:
         news_summary += f"""\n <h2>{country} </h2>\n"""
         entries = country_articles[country]
@@ -287,16 +354,7 @@ def main():
         else:
             news_summary += "<p>Fresh news unavailable</p>"
 
-    # Save as CSV
-    #os.makedirs("output", exist_ok=True)
-    #filename = f"news_{now}.csv"
-    #with open(filename, mode="w", newline='', encoding="utf-8") as file:
-    #    writer = csv.writer(file)
-    #    writer.writerow(["PublishedAt", "Title", "Source", "URL", "Country", "Topic", "Summary"])
-    #    for entry in all_articles:
-    #        writer.writerow(entry)
-
-    # Send the email
+    # Step 6: Send the email
     send_email(news_summary)
 
 if __name__ == "__main__":
