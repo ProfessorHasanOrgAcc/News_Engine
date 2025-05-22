@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import random
 import time
+import json
 from email.mime.text import MIMEText
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
@@ -69,7 +70,7 @@ countries = list(country_phrase_map.keys())
 # Initialize pytrends with Tor
 proxy_list = ['socks5h://127.0.0.1:9050']
 pytrends = TrendReq(proxies=proxy_list, timeout=(20, 40))  # (connect, read)
-
+#---------------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------------
 def get_current_tor_ip(timeout=10):
     proxies = {'http': 'socks5h://127.0.0.1:9050', 'https': 'socks5h://127.0.0.1:9050'}
@@ -105,26 +106,26 @@ def rotate_tor_ip(max_retries=5, wait_time=10):
     print("[ERROR] Failed to rotate Tor IP after max retries.")
     raise Exception("Tor IP rotation failed.")
 #---------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
+# Externalized country code loading
+def load_country_codes(filepath="country_codes.json"):
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"[ERROR] {filepath} not found.")
+        return {}
+#---------------------------------------------------------------------------------------------------------------------------
 def get_top_trending_queries(limit=100, max_checks=100):
     max_retries = 3
     scores = []
     queries = [f"{country} {phrase}" for country, phrase_list in country_phrase_map.items() for phrase in phrase_list]
 
-    country_code_map = {
-        "Bangladesh": "BD",
-        "India": "IN",
-        "Vietnam": "VN",
-        "Indonesia": "ID",
-        "Pakistan": "PK",
-        "Thailand": "TH",
-        "Sri Lanka": "LK",
-        "Philippines": "PH",
-        "Oman": "OM",
-        "United Arab Emirates": "AE"
-    }
-    
     # Randomize queries
     random.shuffle(queries)
+
+    # Load country codes from external file
+    country_code_map = load_country_codes()
     
     # Define the proxies here (for use with both pytrends and requests)
     proxies = {'http': 'socks5h://127.0.0.1:9050', 'https': 'socks5h://127.0.0.1:9050'}
@@ -160,16 +161,16 @@ def get_top_trending_queries(limit=100, max_checks=100):
                     rotate_tor_ip()
                     ip = requests.get('http://httpbin.org/ip', proxies=proxies).json()
                     print("[DEBUG] Current IP via Tor:", ip)
-                    time.sleep(random.uniform(10, 20))  # wait a bit before retrying
+                    time.sleep(random.uniform(8, 15))  # wait a bit before retrying
                 else:
                     print(f"[WARN] {query} failed: {e}")
                     break  # some other error, exit retry loop
         
         # Random delay
-        time.sleep(random.uniform(15, 25))
+        time.sleep(random.uniform(8, 15))
         
-        # Rotate Tor IP every 5 queries
-        if (idx + 1) % 5 == 0:
+        # Rotate Tor IP every 10 queries
+        if (idx + 1) % 10 == 0:
             rotate_tor_ip()
             ip = requests.get('http://httpbin.org/ip', proxies=proxies).json()
             print("[DEBUG] Current IP via Tor:", ip)
@@ -284,7 +285,7 @@ def main():
                     news_summary += f"      📝 {summary}<br>"
                 news_summary += "</p>"
         else:
-            news_summary += "<p>No news found.</p>"
+            news_summary += "<p>Fresh news unavailable</p>"
 
     # Save as CSV
     #os.makedirs("output", exist_ok=True)
