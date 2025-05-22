@@ -19,6 +19,8 @@ Thumbs.db
 .vscode/
 .idea/
 
+!news_cache/*.pkl
+
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
