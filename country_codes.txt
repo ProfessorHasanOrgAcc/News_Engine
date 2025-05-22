@@ -1,4 +1,0 @@
-Bangladesh:BD
-India:IN
-Vietnam:VN
-Indonesia:ID
