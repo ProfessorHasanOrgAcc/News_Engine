@@ -36,22 +36,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             
-      - name: Set NLTK_DATA env
-        run: echo "NLTK_DATA=/home/runner/nltk_data" >> $GITHUB_ENV
-        
-      - name: Download NLTK data
-        run: |
-          python -c "
-          import nltk
-          for pkg in ['punkt', 'punkt_tab', 'stopwords', 'wordnet', 'averaged_perceptron_tagger']:
-              nltk.download(pkg)
-          "
       - name: Cache NLTK data
         uses: actions/cache@v3
         with:
           path: ~/nltk_data
           key: ${{ runner.os }}-nltk-data-${{ hashFiles('**/*.py') }}
-          
+
       - name: Set NLTK_DATA env
         run: echo "NLTK_DATA=/home/runner/nltk_data" >> $GITHUB_ENV
 
@@ -63,8 +53,15 @@ jobs:
           echo "HashedControlPassword 16:9954B614B2DD778A60D7F1B1414D34DC3B2951C465A545628C2A4269C8" | sudo tee -a /etc/tor/torrc
           echo "CookieAuthentication 0" | sudo tee -a /etc/tor/torrc
           sudo service tor restart
-          sleep 10  # Give Tor a moment to initialize
-      
+          sleep 10
+
+      - name: Cache news cache directory
+        uses: actions/cache@v3
+        with:
+          path: news_cache
+          key: news-cache-${{ runner.os }}-${{ hashFiles('**/*.py') }}
+          restore-keys: |
+            news-cache-${{ runner.os }}-
 
       - name: Run scraper
         run: python news_scraper.py
@@ -73,7 +70,8 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add news_cache/*.pkl  # <-- Add this line
+          git add news_cache/*.pkl
           git commit -m "Add news data $(date -u)" || echo "No changes to commit"
           git push
+
 
