@@ -20,6 +20,19 @@ import nltk
 
 CACHE_DIR = "news_cache"
 os.makedirs(CACHE_DIR, exist_ok=True)  # Ensures the directory exists
+
+# Debug prints to check directory status
+print(f"Cache directory absolute path: {os.path.abspath(CACHE_DIR)}")
+print(f"Cache directory exists: {os.path.exists(CACHE_DIR)}")
+print(f"Cache directory writable: {os.access(CACHE_DIR, os.W_OK)}")
+
+# Optional: set permissions explicitly (if needed)
+try:
+    os.chmod(CACHE_DIR, 0o777)  # Full rwx permissions for all users (use with caution)
+    print(f"Permissions for cache directory set to 777")
+except Exception as e:
+    print(f"Failed to set permissions on cache directory: {e}")
+    
 CACHE_FILENAME = "current.pkl"
 MAX_CACHE_SIZE = 1000
 
@@ -318,25 +331,17 @@ def update_and_filter_news_cache(new_articles):
     recent_urls = set(entry[4] for entry in cache[-MAX_CACHE_SIZE:])
     filtered_articles = [entry for entry in new_articles if entry[4] not in recent_urls]
 
-    # Update cache with new entries
-    cache.extend(filtered_articles)
+    cache_path = os.path.join(CACHE_DIR, CACHE_FILENAME)
+    print(f"Saving cache to: {cache_path}")
+
     with open(cache_path, "wb") as f:
         pickle.dump(cache, f)
-
-    return filtered_articles
+    print("Cache saved successfully.")
 #---------------------------------------------------------------------------------------------------------------------------
+MAX_SUMMARIES_PER_RUN = 50
+
 def main():
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    news_summary = f"""
-    <html>
-      <body>
-        <h1>🗓 News Summary for {now}</h1>
-        <p style="font-size: 14px; color: #555;">
-          This automated mail is generated to inform the user regarding key market insights. _Nabil.Hasan<br>
-        </p>
-      </body>
-     </html>
-    """
     raw_articles = []
 
     # Step 1: Get top queries
@@ -344,7 +349,12 @@ def main():
 
     # Step 2: Fetch news articles for each query
     for query in top_queries:
-        articles = get_news(query)
+        try:
+            articles = get_news(query)
+        except Exception as e:
+            print(f"Failed to fetch news for query '{query}': {e}")
+            articles = []
+
         matched_country = next((c for c in countries if c.lower() in query.lower()), "Unknown")
         topic = query.replace(matched_country, '').strip()
 
@@ -354,20 +364,52 @@ def main():
             url = article.get("url", "")
             raw_articles.append((publishedAt, matched_country, topic, title, url))
 
-        time.sleep(random.uniform(1, 3))  # polite delay between requests
+        time.sleep(random.uniform(1, 3))
+    total_raw = len(raw_articles)
 
     # Step 3: Filter and update cache
-    filtered_articles = update_and_filter_news_cache(raw_articles)
+    try:
+        filtered_articles = update_and_filter_news_cache(raw_articles)
+        filter_failed = False
+    except Exception as e:
+        print(f"Failed to update and filter news cache: {e}")
+        filtered_articles = raw_articles
+        filter_failed = True
 
-    # Step 4: Summarize and organize news by country
+    total_filtered = len(filtered_articles)
+    summaries_done = 0
     country_articles = {country: [] for country in countries}
+
     for article in filtered_articles:
+        if summaries_done >= MAX_SUMMARIES_PER_RUN:
+            break
         date, country, topic, title, url = article
-        summary = summarize_article(url)
+        try:
+            summary = summarize_article(url)
+            summaries_done += 1
+        except Exception as e:
+            summary = ""
         entry = (date, title, url, "", country, topic, summary)
         country_articles[country].append(entry)
 
-    # Step 5: Build email HTML
+    # ✨ Step 4: Build summary with run metadata
+    filter_status = "✅ Success" if not filter_failed else "❌ Failed (using raw)"
+    news_summary = f"""
+    <html>
+      <body>
+        <h1>🗓 News Summary for {now}</h1>
+        <p style="font-size: 14px; color: #555;">
+          This automated mail is generated to inform the user regarding key market insights. _Nabil.Hasan<br><br>
+          <strong>📊 Run Metadata:</strong><br>
+          • Top queries checked: {len(top_queries)}<br>
+          • Raw articles fetched: {total_raw}<br>
+          • Filtered articles used: {total_filtered}<br>
+          • Articles summarized: {summaries_done}<br>
+          • Cache update status: {filter_status}<br>
+        </p>
+    """
+
+    # Step 5: Append country-wise news
     for country in countries:
         news_summary += f"""\n <h2>{country} </h2>\n"""
         entries = country_articles[country]
@@ -386,21 +428,9 @@ def main():
         else:
             news_summary += "<p>Fresh news unavailable</p>"
 
-    # Step 6: Send the email
-    send_email(news_summary)
+    # Close HTML
+    news_summary += "</body></html>"
 
-if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        error_msg = f"""
-        <html>
-          <body>
-            <h2>🚨 Script Failure</h2>
-            <p><strong>Error:</strong> {str(e)}</p>
-            <p>Please check logs or code for debugging.</p>
-          </body>
-        </html>
-        """
-        send_email(error_msg)
-        raise
+    # Step 6: Send the email
+    print(f"Sending email with news summary length: {len(news_summary)} characters")
+    send_email(news_summary)
