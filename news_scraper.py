@@ -23,6 +23,8 @@ CACHE_DIR = "news_cache"
 os.makedirs(CACHE_DIR, exist_ok=True)  # Ensures the directory exists
 
 # Debug prints to check directory status
+print(f"SMTP_HOST: {os.getenv('SMTP_HOST')}")
+print(f"TOR_PROXY: {os.getenv('TOR_PROXY')}")
 print(f"Cache directory absolute path: {os.path.abspath(CACHE_DIR)}")
 print(f"Cache directory exists: {os.path.exists(CACHE_DIR)}")
 print(f"Cache directory writable: {os.access(CACHE_DIR, os.W_OK)}")
