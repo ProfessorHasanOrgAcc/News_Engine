@@ -443,3 +443,19 @@ def main():
     # Step 6: Send the email
     print(f"Sending email with news summary length: {len(news_summary)} characters")
     send_email(news_summary)
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        error_msg = f"""
+        <html>
+          <body>
+            <h2>🚨 Script Failure</h2>
+            <p><strong>Error:</strong> {str(e)}</p>
+            <p>Please check logs or code for debugging.</p>
+          </body>
+        </html>
+        """
+        send_email(error_msg)
+        raise
