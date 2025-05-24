@@ -19,22 +19,10 @@ from collections import defaultdict
 from collections import deque
 import nltk
 
-CACHE_DIR = "news_cache"
-os.makedirs(CACHE_DIR, exist_ok=True)  # Ensures the directory exists
-
 # Debug prints to check directory status
-print(f"SMTP_HOST: {os.getenv('SMTP_HOST')}")
-print(f"TOR_PROXY: {os.getenv('TOR_PROXY')}")
-print(f"Cache directory absolute path: {os.path.abspath(CACHE_DIR)}")
-print(f"Cache directory exists: {os.path.exists(CACHE_DIR)}")
-print(f"Cache directory writable: {os.access(CACHE_DIR, os.W_OK)}")
+#print(f"SMTP_HOST: {os.getenv('SMTP_HOST')}")
+#print(f"TOR_PROXY: {os.getenv('TOR_PROXY')}")
 
-# Optional: set permissions explicitly (if needed)
-try:
-    os.chmod(CACHE_DIR, 0o777)  # Full rwx permissions for all users (use with caution)
-    print(f"Permissions for cache directory set to 777")
-except Exception as e:
-    print(f"Failed to set permissions on cache directory: {e}")
     
 CACHE_FILENAME = "current.pkl"
 MAX_CACHE_SIZE = 1000
@@ -259,8 +247,20 @@ def send_email(content):
 #---------------------------------------------------------------------------------------------------------------------------
 def update_and_filter_news_cache(new_articles):
 
-    os.makedirs(CACHE_DIR, exist_ok=True)
+    CACHE_DIR = "news_cache"
+    os.makedirs(CACHE_DIR, exist_ok=True) # Ensures the directory exists
     cache_path = os.path.join(CACHE_DIR, CACHE_FILENAME)
+    
+    try:
+        os.chmod(CACHE_DIR, 0o777)  # Full rwx permissions for all users (use with caution)
+        print(f"Permissions for cache directory set to 777")
+    except Exception as e:
+        print(f"Failed to set permissions on cache directory: {e}")
+        
+    print(f"Cache directory absolute path: {os.path.abspath(CACHE_DIR)}")
+    print(f"Cache directory exists: {os.path.exists(CACHE_DIR)}")
+    print(f"Cache directory writable: {os.access(CACHE_DIR, os.W_OK)}")
+    
     print(f"[Debug] Saving cache to: {cache_path}")
     
     # Load existing cache
