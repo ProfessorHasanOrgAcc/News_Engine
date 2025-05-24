@@ -7,6 +7,7 @@ import random
 import time
 import json
 import pickle
+import shutil
 from email.mime.text import MIMEText
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
@@ -257,9 +258,9 @@ def send_email(content):
 def update_and_filter_news_cache(new_articles):
 
     os.makedirs(CACHE_DIR, exist_ok=True)
-    print(f"[Debug] Saving cache to: {cache_path}")
     cache_path = os.path.join(CACHE_DIR, CACHE_FILENAME)
-
+    print(f"[Debug] Saving cache to: {cache_path}")
+    
     # Load existing cache
     if os.path.exists(cache_path):
         try:
@@ -329,6 +330,7 @@ def update_and_filter_news_cache(new_articles):
     cache = to_keep
 
     recent_urls = set(entry[4] for entry in cache[-MAX_CACHE_SIZE:])
+    cache.extend(filtered_articles)
     filtered_articles = [entry for entry in new_articles if entry[4] not in recent_urls]
 
     cache_path = os.path.join(CACHE_DIR, CACHE_FILENAME)
@@ -337,6 +339,9 @@ def update_and_filter_news_cache(new_articles):
     with open(cache_path, "wb") as f:
         pickle.dump(cache, f)
     print("Cache saved successfully.")
+
+    return filtered_articles
+
 #---------------------------------------------------------------------------------------------------------------------------
 MAX_SUMMARIES_PER_RUN = 50
 
