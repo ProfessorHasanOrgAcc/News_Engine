@@ -2,7 +2,7 @@ name: Run Python script every day at 1 AM UTC
 
 on:
   schedule:
-    - cron: '0 1 * * *'  
+    - cron: '0 1 * * *'  # Every day at 1 AM UTC
   workflow_dispatch:
 
 env:
@@ -25,9 +25,6 @@ jobs:
         with:
           python-version: 3.x
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-        
       - name: Cache Python packages
         uses: actions/cache@v3
         with:
@@ -35,14 +32,17 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-            
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
       - name: Cache NLTK data
         uses: actions/cache@v3
         with:
           path: ~/nltk_data
           key: ${{ runner.os }}-nltk-data-${{ hashFiles('**/*.py') }}
 
-      - name: Set NLTK_DATA env
+      - name: Set NLTK_DATA environment variable
         run: echo "NLTK_DATA=/home/runner/nltk_data" >> $GITHUB_ENV
 
       - name: Install and configure Tor (HashedControlPassword)
@@ -67,11 +67,12 @@ jobs:
         run: python news_scraper.py
 
       - name: Commit and push results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}  # Use your PAT stored as GH_PAT secret
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add news_cache/*.pkl
           git commit -m "Add news data $(date -u)" || echo "No changes to commit"
-          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/ProfessorHasan/News_Engine.git HEAD:main
-
-
+          # Use token in remote URL for push authorization
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/ProfessorHasan/News_Engine.git HEAD:main
