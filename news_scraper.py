@@ -242,20 +242,21 @@ def send_email(content):
         print(f"[ERROR] Failed to send email: {e}")
 #---------------------------------------------------------------------------------------------------------------------------
 def update_and_filter_news_cache(new_articles):
-    """
-    Filters out duplicate news entries based on the last 100 links.
-    Maintains a persistent cache file using pickle.
-    Archives full quarters older than the previous quarter.
 
-    Each entry is a tuple: (date, country, topic, title, url)
-    """
     os.makedirs(CACHE_DIR, exist_ok=True)
+    print(f"[Debug] Saving cache to: {cache_path}")
     cache_path = os.path.join(CACHE_DIR, CACHE_FILENAME)
 
     # Load existing cache
     if os.path.exists(cache_path):
-        with open(cache_path, "rb") as f:
-            cache = pickle.load(f)
+        try:
+            with open(cache_path, "rb") as f:
+                cache = pickle.load(f)
+        except (pickle.UnpicklingError, EOFError, FileNotFoundError):
+            corrupt_path = cache_path + ".corrupt"
+            shutil.move(cache_path, corrupt_path)
+            print(f"[Warning] Corrupted cache moved to: {corrupt_path}")
+            cache = []
     else:
         cache = []
 
@@ -266,28 +267,24 @@ def update_and_filter_news_cache(new_articles):
     # Separate entries by quarter-year
     quarters = {}  # key: (year, quarter), value: list of entries
     for entry in cache:
+        
         date_str = entry[0]  # e.g. "2025-05-22"
-        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        try:
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+        except ValueError:
+            continue  # Skip malformed entries
         q = get_quarter(date_obj)
         key = (date_obj.year, q)
         quarters.setdefault(key, []).append(entry)
-
-    # Determine which quarters to archive:
-    # Archive all quarters older than previous quarter.
-    # i.e., keep current quarter and previous quarter in cache.
-    # So archive quarters < (current_year, current_quarter - 1)
-    # Handle quarter wrap-around properly:
+ 
+    # Determine which quarters to archive
     def quarter_less(a, b):
-        # Compare tuples (year, quarter)
-        # Return True if a < b in chronological order
         if a[0] < b[0]:
             return True
         elif a[0] == b[0]:
             return a[1] < b[1]
         return False
 
-    # Calculate the threshold quarter (previous quarter):
-    # If current quarter is 1, previous quarter is Q4 of last year
     if current_quarter == 1:
         threshold = (current_year - 1, 4)
     else:
@@ -301,10 +298,13 @@ def update_and_filter_news_cache(new_articles):
             archive_year, archive_quarter = q_key
             archive_file = f"Q{archive_quarter}-{archive_year}.pkl"
             archive_path = os.path.join(CACHE_DIR, archive_file)
-            if os.path.exists(archive_path):
-                with open(archive_path, "rb") as af:
-                    archive_data = pickle.load(af)
-            else:
+            try:
+                if os.path.exists(archive_path):
+                    with open(archive_path, "rb") as af:
+                        archive_data = pickle.load(af)
+                else:
+                    archive_data = []
+            except (pickle.UnpicklingError, EOFError):
                 archive_data = []
             archive_data.extend(entries)
             with open(archive_path, "wb") as af:
@@ -315,16 +315,11 @@ def update_and_filter_news_cache(new_articles):
 
     cache = to_keep
 
-    # Build a set of last 100 URLs to check for duplicates
     recent_urls = set(entry[4] for entry in cache[-MAX_CACHE_SIZE:])
-
-    # Filter new articles
     filtered_articles = [entry for entry in new_articles if entry[4] not in recent_urls]
 
     # Update cache with new entries
     cache.extend(filtered_articles)
-
-    # Save updated cache
     with open(cache_path, "wb") as f:
         pickle.dump(cache, f)
 
