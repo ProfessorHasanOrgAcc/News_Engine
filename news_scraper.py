@@ -330,9 +330,9 @@ def update_and_filter_news_cache(new_articles):
     cache = to_keep
 
     recent_urls = set(entry[4] for entry in cache[-MAX_CACHE_SIZE:])
-    cache.extend(filtered_articles)
     filtered_articles = [entry for entry in new_articles if entry[4] not in recent_urls]
-
+    cache.extend(filtered_articles)
+    
     cache_path = os.path.join(CACHE_DIR, CACHE_FILENAME)
     print(f"Saving cache to: {cache_path}")
 
@@ -351,6 +351,8 @@ def main():
 
     # Step 1: Get top queries
     top_queries = get_top_trending_queries(limit=100)
+    print(f"DEBUG: Top trending queries fetched: {len(top_queries)}")
+    print(top_queries[:10])  # print first 10 for quick check
 
     # Step 2: Fetch news articles for each query
     for query in top_queries:
