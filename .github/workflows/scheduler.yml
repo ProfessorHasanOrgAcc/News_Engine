@@ -68,11 +68,11 @@ jobs:
 
       - name: Commit and push results
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}  # Use your PAT stored as GH_PAT secret
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add news_cache/*.pkl
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/ProfessorHasan/News_Engine.git
+          git add news_cache/*.pkl || echo "No files to add"
           git commit -m "Add news data $(date -u)" || echo "No changes to commit"
-          # Use token in remote URL for push authorization
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/ProfessorHasan/News_Engine.git HEAD:main
+          git push origin main
