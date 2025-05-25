@@ -1,0 +1,8 @@
+      - name: Test write permission
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          echo "Test commit at $(date -u)" >> dummy.txt
+          git add dummy.txt
+          git commit -m "Test commit"
+          git push origin news-cache-branch
