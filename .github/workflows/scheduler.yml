@@ -20,9 +20,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          ref: news-cache-branch   # Checkout your dedicated cache branch
-          persist-credentials: false  # IMPORTANT for PAT-based push to work
-          
+          ref: news-cache-branch
+          persist-credentials: false  # Required when using GH_PAT manually
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -48,7 +48,7 @@ jobs:
       - name: Set NLTK_DATA environment variable
         run: echo "NLTK_DATA=/home/runner/nltk_data" >> $GITHUB_ENV
 
-      - name: Install and configure Tor (HashedControlPassword)
+      - name: Install and configure Tor
         run: |
           sudo apt-get update
           sudo apt-get install tor -y
@@ -75,13 +75,10 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/ProfessorHasan/News_Engine.git
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/ProfessorHasanOrgAcc/News_Engine.git
           
-          git fetch origin news-cache-branch
-          # Make sure branch exists or create it if needed:
-          if ! git show-ref --verify --quiet refs/heads/news-cache-branch; then
-            git checkout -b news-cache-branch
-          fi
+          git fetch origin news-cache-branch || git checkout -b news-cache-branch
+          git checkout news-cache-branch
 
           git add news_cache/*.pkl || echo "No files to add"
           git commit -m "Add news data $(date -u)" || echo "No changes to commit"
