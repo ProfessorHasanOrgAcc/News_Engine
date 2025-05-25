@@ -1,6 +1,5 @@
 name: Run Python script every day at 1 AM UTC
 
-
 on:
   schedule:
     - cron: '0 1 * * *'  # Every day at 1 AM UTC
@@ -20,6 +19,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          ref: news-cache-branch   # Checkout your dedicated cache branch
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -74,6 +75,12 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git remote set-url origin https://x-access-token:${GH_PAT}@github.com/ProfessorHasan/News_Engine.git
+
+          # Make sure branch exists or create it if needed:
+          if ! git show-ref --verify --quiet refs/heads/news-cache-branch; then
+            git checkout -b news-cache-branch
+          fi
+
           git add news_cache/*.pkl || echo "No files to add"
           git commit -m "Add news data $(date -u)" || echo "No changes to commit"
-          git push origin main
+          git push origin news-cache-branch
