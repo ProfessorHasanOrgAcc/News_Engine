@@ -6,3 +6,4 @@ Pakistan: limestone Price, clinker shortage, coal price, port congestion, domest
 China: limestone Price, Granulated Blast Furnace Slag, clinker shortage, coal price, port congestion, domestic cement consumption, bulk shipping, energy price change, clinker tariff
 Japan: Granulated Blast Furnace Slag Price, port congestion, domestic cement consumption, bulk shipping, energy price change
 United Arab Emirates: limestone Price, Gypsum Price, clinker shortage, coal price, port congestion, domestic cement consumption, bulk shipping, energy price change, clinker tariff
+Afganistan: Clinker price
