@@ -1,0 +1,30 @@
+name: Test Write Permission
+
+on:
+  workflow_dispatch:  # This just enables manual triggering
+
+jobs:
+  test-write:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: news-cache-branch
+
+      - name: Set Git credentials
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/ProfessorHasan/News_Engine.git
+
+      - name: Test write permission
+        run: |
+          echo "Test commit at $(date -u)" >> dummy.txt
+          git add dummy.txt
+          git commit -m "Test commit"
+          git push origin news-cache-branch
+
