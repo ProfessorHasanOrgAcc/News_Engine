@@ -1,4 +1,6 @@
-      - name: Test write permission
+on:
+  workflow_dispatch:   
+        - name: Test write permission
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
