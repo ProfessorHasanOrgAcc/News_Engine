@@ -56,7 +56,7 @@ missing_vars = [var for var in required_env if not os.getenv(var)]
 if missing_vars:
     raise EnvironmentError(f"Missing the following environment variables: {', '.join(missing_vars)}")
 
-BASE_URL = "https://newsapi.org/v2/everything"
+
 
 
 #---------------------------------------------------------------------------------------------------------------------------
@@ -193,6 +193,8 @@ def get_top_trending_queries(limit=100, max_checks=100):
     return [q for q, _ in sorted_queries]
 
 #---------------------------------------------------------------------------------------------------------------------------
+BASE_URL = "https://newsapi.org/v2/everything"
+
 def get_news(query):
     # Limit to past n days
     from_date = (datetime.utcnow() - timedelta(days=15)).strftime("%Y-%m-%d")
@@ -223,7 +225,7 @@ def summarize_article(url):
             article.nlp()
             return article.summary
         except:
-            return article.text[:400]
+            return article.text[:500]
     except Exception as e:
         print(f"[WARN] Failed to summarize article: {url} | Reason: {e}")
         return None
