@@ -199,39 +199,51 @@ SOURCES_URL = "https://newsapi.org/v2/sources"
 # Cache sources per country to avoid repeated API calls
 _country_sources_cache = {}
 
+def get_all_sources():
+    """Fetch all news sources only once per run and cache in memory."""
+    if "_all_sources" not in _country_sources_cache:
+        params = {"apiKey": API_KEY, "language": "en"}
+        try:
+            response = requests.get(SOURCES_URL, params=params)
+            response.raise_for_status()
+            sources = response.json().get("sources", [])
+            _country_sources_cache["_all_sources"] = sources
+        except Exception as e:
+            print(f"[WARN] Failed to fetch NewsAPI sources: {e}")
+            _country_sources_cache["_all_sources"] = []
+    return _country_sources_cache["_all_sources"]
+    
 def get_local_source_ids(country):
+    """Return all NewsAPI source IDs for a given country, using ISO code from country_codes.json."""
     if country in _country_sources_cache:
         return _country_sources_cache[country]
 
-    params = {
-        "apiKey": API_KEY,
-        "language": "en",
-        "country": None  # Not all countries supported; we filter manually below
-    }
-    try:
-        response = requests.get(SOURCES_URL, params=params)
-        response.raise_for_status()
-        sources = response.json().get("sources", [])
-        # Filter by country name in the source's name or description
-        country_lower = country.lower()
-        local_sources = [
-            s['id'] for s in sources
-            if s.get('country') == country_lower or country_lower in s.get('name', '').lower() or country_lower in s.get('description', '').lower()
-        ]
-        _country_sources_cache[country] = local_sources
-        return local_sources
-    except Exception as e:
-        print(f"[WARN] Failed to fetch sources for {country}: {e}")
-        return []
+    # Load country code mapping
+    country_code_map = load_country_codes()   # should return { "Thailand": "th", ... }
+    code = country_code_map.get(country, "").lower()
+    all_sources = get_all_sources()
 
+    # Filter sources matching the ISO code
+    local_sources = [src['id'] for src in all_sources if src.get('country', '').lower() == code]
+    _country_sources_cache[country] = local_sources
+    return local_sources
+
+def extract_country_from_query(query):
+    """Extract the country name from the start of the query by matching against known countries (handles spaces)."""
+    query_lower = query.lower()
+    for country in countries:
+        if query_lower.startswith(country.lower()):
+            return country
+    # fallback: first word
+    return query.split(" ")[0]
+    
 def get_news(query):
-    # Limit to past n days
     from_date = (datetime.utcnow() - timedelta(days=15)).strftime("%Y-%m-%d")
     to_date = datetime.utcnow().strftime("%Y-%m-%d")
 
-    country = query.split(" ")[0]  # Get the first word as country
+    country = extract_country_from_query(query)
     local_sources = get_local_source_ids(country)
-    
+
     params = {
         "q": query,
         "apiKey": API_KEY,
@@ -244,6 +256,8 @@ def get_news(query):
 
     if local_sources:
         params["sources"] = ",".join(local_sources)
+    else:
+        print(f"[INFO] No local sources found for {country}. Falling back to global news.")
 
     try:
         response = requests.get(BASE_URL, params=params)
