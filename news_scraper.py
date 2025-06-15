@@ -194,22 +194,59 @@ def get_top_trending_queries(limit=100, max_checks=100):
 
 #---------------------------------------------------------------------------------------------------------------------------
 BASE_URL = "https://newsapi.org/v2/everything"
+SOURCES_URL = "https://newsapi.org/v2/sources"
+
+# Cache sources per country to avoid repeated API calls
+_country_sources_cache = {}
+
+def get_local_source_ids(country):
+    if country in _country_sources_cache:
+        return _country_sources_cache[country]
+
+    params = {
+        "apiKey": API_KEY,
+        "language": "en",
+        "country": None  # Not all countries supported; we filter manually below
+    }
+    try:
+        response = requests.get(SOURCES_URL, params=params)
+        response.raise_for_status()
+        sources = response.json().get("sources", [])
+        # Filter by country name in the source's name or description
+        country_lower = country.lower()
+        local_sources = [
+            s['id'] for s in sources
+            if s.get('country') == country_lower or country_lower in s.get('name', '').lower() or country_lower in s.get('description', '').lower()
+        ]
+        _country_sources_cache[country] = local_sources
+        return local_sources
+    except Exception as e:
+        print(f"[WARN] Failed to fetch sources for {country}: {e}")
+        return []
 
 def get_news(query):
     # Limit to past n days
     from_date = (datetime.utcnow() - timedelta(days=15)).strftime("%Y-%m-%d")
     to_date = datetime.utcnow().strftime("%Y-%m-%d")
+
+    country = query.split(" ")[0]  # Get the first word as country
+    local_sources = get_local_source_ids(country)
     
+    params = {
+        "q": query,
+        "apiKey": API_KEY,
+        "sortBy": "publishedAt",
+        "language": "en",
+        "pageSize": 2,
+        "from": from_date,
+        "to": to_date
+    }
+
+    if local_sources:
+        params["sources"] = ",".join(local_sources)
+
     try:
-        response = requests.get(BASE_URL, params={
-            "q": query,
-            "apiKey": API_KEY,
-            "sortBy": "publishedAt",
-            "language": "en",
-            "pageSize": 2,
-            "from": from_date,
-            "to": to_date
-        })
+        response = requests.get(BASE_URL, params=params)
         response.raise_for_status()
         return response.json().get("articles", [])
     except requests.RequestException as e:
