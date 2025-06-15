@@ -1,9 +1,9 @@
-Thailand: limestone Price change, clinker shortage, coal price change, port congestion, domestic cement consumption, bulk shipping crisis, energy price change, clinker tariff hike
-Indonesia: limestone Price change, clinker shortage, coal price change, port congestion, domestic cement consumption, bulk shipping crisis, energy price change, clinker tariff hike
-Vietnam: limestone Price change, clinker shortage, coal price change, port congestion, domestic cement consumption, bulk shipping crisis, energy price change, clinker tariff hike
-Oman: Gypsum Price change, limestone Price change, clinker shortage, coal price change, port congestion, domestic cement consumption, bulk shipping crisis, energy price change, clinker tariff hike
+Thailand: limestone Price change, clinker shortage, coal price change, Sea port congestion, domestic cement consumption, bulk shipping crisis, energy price change, clinker tariff hike
+Indonesia: limestone Price change, clinker shortage, coal price change, Sea port congestion, domestic cement consumption, bulk shipping crisis, energy price change, clinker tariff hike
+Vietnam: limestone Price change, clinker shortage, coal price change, Sea port congestion, domestic cement consumption, bulk shipping crisis, energy price change, clinker tariff hike
+Oman: Gypsum Price change, limestone Price change, clinker shortage, coal price change, Sea port congestion, domestic cement consumption, bulk shipping crisis, energy price change, clinker tariff hike
 Pakistan: limestone Price change, clinker shortage, coal price change, port congestion, domestic cement consumption, bulk shipping crisis, energy price change, clinker tariff hike
-China: limestone Price change, Granulated Blast Furnace Slag, clinker shortage, coal price change, port congestion, domestic cement consumption, bulk shipping crisis, energy price change, clinker tariff hike
-Japan: Granulated Blast Furnace Slag (GBFS) Price change, port congestion, domestic cement consumption, bulk shipping crisis, energy price change
-United Arab Emirates: limestone Price change, Gypsum Price change, clinker shortage, coal price change, port congestion, domestic cement consumption, bulk shipping crisis, energy price change, clinker tariff hike
+China: limestone Price change, Granulated Blast Furnace Slag (GBFS) Price change, clinker shortage, coal price change, Sea port congestion, domestic cement consumption, bulk shipping crisis, energy price change, clinker tariff hike
+Japan: Granulated Blast Furnace Slag (GBFS) Price change, Sea port congestion, domestic cement consumption, bulk shipping crisis, energy price change
+United Arab Emirates: limestone Price change, Gypsum Price change, clinker shortage, coal price change, Sea port congestion, domestic cement consumption, bulk shipping crisis, energy price change, clinker tariff hike
 
